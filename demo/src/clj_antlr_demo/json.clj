@@ -2,29 +2,30 @@
   "An example JSON parser."
   (:use clj-antlr.core)
   (:import JsonBaseVisitor
+           JsonVisitor
            JsonLexer
            JsonParser))
 
-(def visitor
-  (proxy [JsonBaseVisitor] []
-    (visitJsonObject [c]
-                     (.visit this (.object c)))
-    (visitJsonArray [c]
-                    (.visit this (.array c)))
-    (visitObject [c]
-                 (into {} (map #(.visit this %) (.pair c))))
-    (visitPair [c]
-               [(keyword (read-string (.getText (.STRING c))))
-                (.visit this (.value c))])
-    (visitArray       [c] (map #(.visit this %) (.value c)))
-    (visitValueString [c] (read-string (.getText c)))
-    (visitValueNumber [c] (read-string (.getText c)))
-    (visitValueObject [c] (.visit this (.object c)))
-    (visitValueArray  [c] (.visit this (.array c)))
-    (visitValueTrue   [c] true)
-    (visitValueFalse  [c] false)
-    (visitValueNull   [c] nil)))
+(def v
+  (visitor JsonVisitor
+    (JsonObject [t c]
+                     (visit t (.object c)))
+    (JsonArray [t c]
+                    (visit t (.array c)))
+    (Object [t c]
+                 (into {} (map (partial visit t) (.pair c))))
+    (Pair [t c]
+               [(keyword (read-string (text (.STRING c))))
+                (visit t (.value c))])
+    (Array       [t c] (map (partial visit t) (.value c)))
+    (ValueString [t c] (read-string (text c)))
+    (ValueNumber [t c] (read-string (text c)))
+    (ValueObject [t c] (visit t (.object c)))
+    (ValueArray  [t c] (visit t (.array c)))
+    (ValueTrue   [t c] true)
+    (ValueFalse  [t c] false)
+    (ValueNull   [t c] nil)))
 
 (defn parse-string
   [s]
-  (visit-string JsonLexer JsonParser visitor .json s))
+  (visit-string JsonLexer JsonParser v .json s))

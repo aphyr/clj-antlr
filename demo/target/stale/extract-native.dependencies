@@ -1,1 +1,0 @@
-([:dependencies ([org.clojure/clojure "1.5.0"] [clj-antlr/clj-antlr "0.0.1-SNAPSHOT"] [midje/midje "1.5.0"] [cheshire/cheshire "5.1.1"])])
