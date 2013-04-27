@@ -2,6 +2,13 @@
   (:use midje.sweet
         clj-antlr-demo.json))
 
+(facts read-json-string
+       (fact (read-json-string "\"hi\"") => "hi")
+       (fact (read-json-string "\"a new \\n line\"") => "a new \n line")
+       (fact (read-json-string "\"\\\\ \\/ \\\" \\b \\f \\n \\r \\t\"") =>
+             "\\ / \" \b \f \n \r \t")
+       (fact (read-json-string "\"\\uaab0\"") => "\uaab0"))
+
 (facts "JSON"
        (fact (parse-string "[]")     => [])
        (fact (parse-string "[true]") => [true])
