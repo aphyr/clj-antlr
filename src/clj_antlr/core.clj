@@ -4,8 +4,10 @@
                     Reader)
            (org.antlr.v4.runtime ANTLRInputStream
                                  CommonTokenStream)
-           (org.antlr.v4.runtime.tree ParseTree
-                                      ParseTreeWalker)))
+           (org.antlr.v4.runtime.tree Tree
+                                      ParseTree
+                                      ParseTreeWalker
+                                      ParseTreeVisitor)))
 
 (defmacro multi-hinted-let
   "A let expression which expands into multiple type-hinted bodies with runtime
@@ -44,28 +46,28 @@
 
 (defn visit
   "Visits a node with a visitor."
-  [visitor node]
+  [^ParseTreeVisitor visitor node]
   (.visit visitor node))
 
 (defn child-count
   "How many children does a node have?"
-  [node]
+  [^Tree node]
   (.getChildCount node))
 
 (defn children
   "Returns the children of a RuleNode."
-  [node]
+  [^Tree node]
   (map #(.getChild node %)
        (range (child-count node))))
 
 (defn parent
   "The parent of a node."
-  [node]
+  [^Tree node]
   (.getParent node))
 
 (defn text
   "The text of a node."
-  [node]
+  [^ParseTree node]
   (.getText node))
 
 (defmacro visitor
@@ -156,4 +158,4 @@
      tokens
      (parser ~parser-class)
      ~root-node
-     (.visit ~visitor)))
+     (.visit ~(vary-meta visitor assoc :tag `ParseTreeVisitor))))
