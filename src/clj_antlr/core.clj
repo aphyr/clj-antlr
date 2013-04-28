@@ -1,5 +1,6 @@
 (ns clj-antlr.core
   (:use clojure.reflect)
+  (:require [clojure.set :as set])
   (:import (java.io InputStream
                     Reader)
            (org.antlr.v4.runtime ANTLRInputStream
@@ -70,6 +71,100 @@
   [^ParseTree node]
   (.getText node))
 
+(defn signature
+  "The signature of a reflected method."
+  [meth]
+  (select-keys meth [:name :parameter-types :return-type]))
+
+(defn method?
+  "Is a reflection member a method?"
+  [member]
+  (boolean (:return-type member)))
+
+(defn method-signatures
+  "Returns a list of method signatures for a class."
+  [class]
+  (->> class
+    reflect
+    :members
+    (filter method?)
+    (map signature)))
+
+(defn unique-methods
+  "Given a class, returns specs for methods which are defined in that class and
+  are *not* defined in its supers."
+  [class]
+  ; Compute all superclass/interface method signatures
+  (let [supes (->> class
+                supers
+                (mapcat method-signatures)
+                set)]
+    ; Take methods on this class
+    (->> class reflect :members (filter method?)
+      ; And drop any which have corresponding signatures in supers
+      (remove (comp supes signature)))))
+
+(defn ->class
+  "Converts symbols and strings into classes."
+  [sym]
+  (Class/forName (str sym)))
+
+(defn visitor-method-children
+  "Given a visitor method, returns a map of children to forms which visit
+  those children, e.g.
+
+  {:kittens (map (partial visit this (.kittens ctx)))}"
+  [sig]
+  (->> sig
+    ; Find the parser context this method accepts
+    :parameter-types
+    first
+    ->class
+    ; Figure out what methods that context uniquely defines
+    unique-methods
+    ; Select zero-arities
+    (filter (comp empty? :parameter-types))
+    ; Three possibilities forms:
+    ; - Returns a TerminalNode: (text (.FOO ctx))
+    ; - Returns a List: (map (partial visit this) (.foo ctx))
+    ; - Returns a thing: (visit this (.foo ctx))
+    (map (fn [meth]
+           (let [child (:name meth)
+                 acc   (symbol (str "." child))
+                 value (list acc 'ctx)]
+             [(keyword child)
+              (list `when-let `[~'v ~value]
+                    (condp = (:return-type meth)
+                      ; Multiple children
+                      'java.util.List
+                      `(map (partial visit ~'this) ~'v)
+
+                      ; Terminal node
+                      'org.antlr.v4.runtime.tree.TerminalNode
+                      `(text ~'v)
+
+                      ; Descend
+                      `(visit ~'this ~'v)))])))
+    ; Make a map out of it.
+    (into {})))
+
+(defn degenerate-visitor-spec
+  "A reify spec for a particular visitor method. Returns code which, when
+  used in a visitor, handles that node by returning a hashmap of its children.
+  When a node has only one children, returns that child's value instead."
+  [sig]
+  (let [children (visitor-method-children sig)]
+    ; Construct a reify spec for this method
+    (list (:name sig)
+          '[this ctx]
+          (condp = (count children)
+            ; When there are no children, return the text at this node.
+            0 `(text ~'ctx)
+            ; With one child, proxy directly to the child node.
+            1 (first (vals children))
+            ; Otherwise, make a map of our children
+            children))))
+
 (defmacro visitor
   "Helps compile a visitor for an antlr grammar. Takes the name of a visitor
   interface, followed by several method bodies. Given a grammar with a node
@@ -127,9 +222,9 @@
         default-specs  (->> reflection
                          :members
                          (remove (comp provided-spec-names :name))
-                         (map (fn [m]
-                                `(~(:name m) [~'this ~'ctx]))))]
-                         
+                         ; Sort for convenience in reading code
+                         (sort-by :name)
+                         (map degenerate-visitor-spec))]
 
     `(reify ~interface-name
        ~@reify-specs
