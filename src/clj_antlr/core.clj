@@ -48,7 +48,13 @@
 (defn visit
   "Visits a node with a visitor."
   [^ParseTreeVisitor visitor node]
-  (.visit visitor node))
+  (when-not (nil? node)
+    (.visit visitor node)))
+
+(defn child
+  "Get a specific child in a tree."
+  [^Tree node i]
+  (.getChild node i))
 
 (defn child-count
   "How many children does a node have?"
@@ -165,6 +171,21 @@
             ; Otherwise, make a map of our children
             children))))
 
+(defn visitor-spec
+  "Helps compile reify functions pecs for a particular visitor method. In its
+  two-arity form, generates one of a few common parse helpers. In its n-arity
+  form, passes through user-specified code."
+  ([sig & args]
+   (if (vector? (first args))
+     ; By default, pass through user code unchanged.
+     `(~(:name sig) ~@args)
+
+     (case (first args)
+       ; This builtin chooses the first non-nil branch.
+       :first-alternative
+       (let [children (vals (visitor-method-children sig))]
+         `(~(:name sig) [~'this ~'ctx] (visit ~'this (child ~'ctx 0))))))))
+
 (defmacro visitor
   "Helps compile a visitor for an antlr grammar. Takes the name of a visitor
   interface, followed by several method bodies. Given a grammar with a node
@@ -202,7 +223,7 @@
 
         ; Translate provided specs into reify specs
         reify-specs (->> specs
-                      (map (fn [[node- [this- ctx-] & body]]
+                      (map (fn [[node- & args]]
                              (let [spec-name (symbol (str "visit" node-))
                                    method    (get iface-methods spec-name)]
 
@@ -215,7 +236,7 @@
                                                interface-name))))
 
                                ; Reify method spec
-                               `(~spec-name [~this- ~ctx-] ~@body)))))
+                               (apply visitor-spec method args)))))
 
         ; Fill in unfulfilled methods for the interface
         provided-spec-names (set (map first reify-specs))
@@ -228,6 +249,7 @@
 
     `(reify ~interface-name
        ~@reify-specs
+
        ~@default-specs
 
        ; Adapted from http://www.antlr.org/api/Java/org/antlr/v4/runtime/tree/AbstractParseTreeVisitor.html
