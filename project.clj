@@ -1,4 +1,4 @@
-(defproject clj-antlr "0.1.0"
+(defproject clj-antlr "0.1.1-SNAPSHOT"
   :description "Clojure sugar over the ANTLR 4 parser library."
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
