@@ -1,9 +1,10 @@
 (ns clj-antlr-demo.bin
   (:gen-class)
   (:require [cheshire.core :as ch])
+  (:import (java.io PushbackReader))
   (:use criterium.core
         clojure.java.io
-        clj-antlr-demo.json))
+        clj-antlr-demo.edn))
 
 (defn -main
   "Parse a JSON file."
@@ -20,8 +21,8 @@
 
   (println)
   (println)
-  (println "Cheshire")
+  (println "Clojure reader")
   (with-progress-reporting
     (bench
-      (with-open [r (reader file)]
-        (ch/parse-stream r true)))))
+      (with-open [r (PushbackReader. (reader file))]
+        (read r)))))
