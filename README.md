@@ -5,7 +5,7 @@ tricks to turn small Clojure mappings into full parse tree transformations.
 
 ## Installation
 
-Add the latest release from Clojars to your project.clj.
+Add the latest release from https://clojars.org/clj-antlr to your project.clj.
 
 ## Usage
 
