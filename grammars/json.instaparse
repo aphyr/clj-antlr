@@ -1,0 +1,19 @@
+jsonText = <WS*> (jsonObject | jsonArray) <WS*>
+
+jsonValue = 'false' | 'null' | 'true' | jsonObject | jsonArray | jsonNumber | jsonString
+
+jsonNumber = NUMBER
+
+jsonString = STRING
+
+jsonObject = '{' <WS*> (member (<WS*> ',' <WS*> member)*)? <WS*> '}'
+
+member = STRING <WS*> ':' <WS*> jsonValue
+
+jsonArray = '[' <WS*> (jsonValue (<WS*> ',' <WS*> jsonValue)*)? <WS*> ']'
+
+<NUMBER> = #"-?(0|([1-9][0-9]*))(\.[0-9]+)?([eE][+-]?[0-9]+)?"
+
+<WS> = ' ' | '\t' | '\n' | '\r'
+
+<STRING> = #"\"([^\"\\]|\\([\"\\/nfnrt])|(u[0-9a-fA-F]{4}))*\""
