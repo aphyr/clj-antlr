@@ -2,7 +2,13 @@
   (:use clj-antlr.interpreted
         clj-antlr.coerce
         clojure.test
-        clojure.pprint))
+        clojure.pprint)
+  (:require [criterium.core :as criterium]))
+
+(deftest perf
+  (let [json (grammar "demo/src/java/Json.g4")
+        blob (slurp "demo/test.json")]
+    (criterium/bench (tree->sexpr (parse json blob "jsonText")))))
 
 (deftest interprets-json
   (let [grammar (grammar "demo/src/java/Json.g4")

@@ -2,19 +2,29 @@
   (:require [clj-antlr.common :as c])
   (:import (org.antlr.v4.runtime.tree TerminalNode
                                       ParseTree)
-           (org.antlr.v4.runtime ParserRuleContext)))
+           (org.antlr.v4.runtime ParserRuleContext
+                                 Parser)))
 
-(defprotocol Sexpr
-  "Coerces trees to hiccup-style structures."
-  (sexpr [^ParseTree tree ^Parser p]))
+;(defprotocol Sexpr
+;  "Coerces trees to hiccup-style structures."
+;  (sexpr [^ParseTree tree ^Parser p]))
+;
+;(extend-protocol Sexpr
+;  TerminalNode
+;  (sexpr [t p] (.getText t))
+;
+;  ParserRuleContext
+;  (sexpr [t p] (cons (keyword (c/parser-rule-name p (.getRuleIndex t)))
+;                     (doall (map #(sexpr % p) (c/children t))))))
 
-(extend-protocol Sexpr
-  TerminalNode
-  (sexpr [t p] (.getText t))
-
-  ParserRuleContext
-  (sexpr [t p] (cons (keyword (c/parser-rule-name p (.getRuleIndex t)))
-                     (map #(sexpr % p) (c/children t)))))
+(defn sexpr [^ParseTree t ^Parser p]
+  (if (instance? ParserRuleContext t)
+    (cons (->>
+            (.getRuleIndex ^ParserRuleContext t)
+            (c/parser-rule-name p)
+            c/fast-keyword)
+          (doall (map #(sexpr % p) (c/children t))))
+    (.getText t)))
 
 (defn tree->sexpr
   "Takes a map with a :tree node and a :parser (required for interpreting the

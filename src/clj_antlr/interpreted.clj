@@ -9,23 +9,6 @@
                                  ParserInterpreter)
            (org.antlr.v4.runtime.tree ParseTree)))
 
-(defn string->lexer-grammar
-  "Parses a lexer grammar into a LexerGrammar object.
-
-  (lexer-grammar \"lexer grammar L;
-  A : 'a' ;
-  B : 'b' ;
-  C : 'c' ;\")"
-  [grammar-string]
-  (LexerGrammar. grammar-string))
-
-(defn string->parser-grammar
-  "Parses a parser grammar into a Grammar object, given a lexer grammar.
-
-  (parser-grammar (lexer-grammar \"...\") \"grammar T;\n s : (A|B)* C ;\")"
-  [lexer-grammar parser-grammar-string]
-  (Grammar. parser-grammar-string lexer-grammar))
-
 (defn grammar
   "Loads a Grammar from a file."
   [filename]
@@ -34,11 +17,11 @@
 (defn parse
   "Given a Grammar, the string name of a root node to start with, and an input
   (string, reader, or inputstream), returns the StringTree for the input."
-  [grammar input root]
+  [^Grammar grammar input ^String root]
   (let [tokens (-> grammar
                    (.createLexerInterpreter (common/input-stream input))
                    (CommonTokenStream.))
-        rule   (-> grammar (.getRule root) .index)
+        rule   (.index (.getRule grammar root))
         parser (.createParserInterpreter grammar tokens)]
     {:tree (.parse parser rule)
      :parser parser}))

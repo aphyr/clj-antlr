@@ -2,6 +2,7 @@
   "Common functions for building and using parsers."
   (:import (java.io InputStream
                     Reader)
+           (java.util.concurrent ConcurrentHashMap)
            (org.antlr.v4.runtime ANTLRInputStream
                                  CommonTokenStream
                                  Parser)
@@ -9,6 +10,21 @@
                                       ParseTree
                                       ParseTreeWalker
                                       ParseTreeVisitor)))
+
+(def ^ConcurrentHashMap fast-keyword-cache
+  "A map of strings to keywords."
+  (ConcurrentHashMap. 1024))
+
+(defn fast-keyword
+  "Like (keyword str), but faster."
+  [s]
+  (or (.get fast-keyword-cache s)
+      (let [k (keyword s)]
+        (if (< 1024 (.size fast-keyword-cache))
+          k
+          (do
+            (.put fast-keyword-cache s k)
+            k)))))
 
 (defmacro multi-hinted-let
   "A let expression which expands into multiple type-hinted bodies with runtime
