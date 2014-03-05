@@ -34,7 +34,7 @@
 (defn parse
   "Given a Grammar, the string name of a root node to start with, and an input
   (string, reader, or inputstream), returns the StringTree for the input."
-  [grammar root input]
+  [grammar input root]
   (let [tokens (-> grammar
                    (.createLexerInterpreter (common/input-stream input))
                    (CommonTokenStream.))

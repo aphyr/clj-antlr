@@ -5,8 +5,25 @@
         clojure.pprint))
 
 (deftest interprets-json
-  (-> "demo/src/java/Json.g4"
-      grammar
-      (parse "json" "{\"nums\": [1,2,3]}")
-      ->hiccup
-      pprint))
+  (let [grammar (grammar "demo/src/java/Json.g4")
+        sexpr (-> grammar
+                  (parse "{\"nums\": [1,2,3]}" "jsonText")
+                  tree->sexpr)]
+    (pprint sexpr)
+    (is (= sexpr
+           '(:jsonText
+              (:jsonObject
+                "{"
+                (:member
+                  "\"nums\""
+                  ":"
+                  (:jsonValue
+                    (:jsonArray
+                      "["
+                      (:jsonValue (:jsonNumber "1"))
+                      ","
+                      (:jsonValue (:jsonNumber "2"))
+                      ","
+                      (:jsonValue (:jsonNumber "3"))
+                      "]")))
+                "}"))))))
