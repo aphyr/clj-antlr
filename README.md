@@ -45,9 +45,14 @@ represented as strings.
 
 ## Faster?
 
-On a real-world 3.5KB JSON object, clj-antlr with a straightforward JSON
-grammar is about 70 times faster than an identical AST built by an Instaparse
-grammar.
+On a [real-world 3.5KB JSON
+object](https://github.com/aphyr/clj-antlr/blob/master/data/test.json),
+clj-antlr with a [typical JSON
+grammar](https://github.com/aphyr/clj-antlr/blob/master/grammars/Json.g4) is
+about 70 times faster than an identical AST built by an [Instaparse
+grammar](https://github.com/aphyr/clj-antlr/blob/master/grammars/json.instaparse).
+Since Instaparse doesn't really have a separation between grammar and lexer
+rules, I'm using regular expressions for strings, ints, etc; but the transformation between grammars is pretty straightforward.
 
 ```
 kingsbury@hackbook:~/clj-antlr master$ lein test :perf
