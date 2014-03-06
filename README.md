@@ -6,7 +6,8 @@ with far fewer features.
 
 ## Installation
 
-Just add clj-antlr to your project.clj, and load a grammar file at runtime.
+Just [add clj-antlr to your project.clj](https://clojars.org/clj-antlr), and
+load a grammar file at runtime.
 
 No Antlr installation is required; clj-antlr will load the grammar for you, no
 compilation needed. No macros, either! Running the parser in interpreted mode
