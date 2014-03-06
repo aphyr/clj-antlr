@@ -7,8 +7,10 @@
                  [org.antlr/antlr4-runtime "4.2"]
                  [org.antlr/antlr4 "4.2"]]
   :profiles {:dev {:dependencies
-                   [[midje "1.5.0"]
-                    [criterium "0.4.0"]
+                  [[criterium "0.4.0"]
                     [instaparse "1.2.6"]]}}
   :java-source-paths ["src/java/"]
+  :test-selectors {:default #(not (:perf %))
+                   :perf :perf
+                   :all  (fn [_] true)}
   :global-vars {*warn-on-reflection* true})
