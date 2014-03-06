@@ -15,13 +15,17 @@
   (Grammar/load filename))
 
 (defn parse
-  "Given a Grammar, the string name of a root node to start with, and an input
-  (string, reader, or inputstream), returns the StringTree for the input."
-  [^Grammar grammar input ^String root]
-  (let [tokens (-> grammar
-                   (.createLexerInterpreter (common/input-stream input))
-                   (CommonTokenStream.))
-        rule   (.index (.getRule grammar root))
-        parser (.createParserInterpreter grammar tokens)]
-    {:tree (.parse parser rule)
-     :parser parser}))
+  "Given a Grammar, text to parse (a string, reader, or inputstream), and an
+  optional root node to parse from, returns a map of the Parser and ParseTree
+  for the input. If no root node is given, chooses the first rule from the
+  grammar."
+  ([grammar input]
+   (parse grammar input (common/first-rule grammar)))
+  ([^Grammar grammar input ^String root]
+   (let [tokens (-> grammar
+                    (.createLexerInterpreter (common/input-stream input))
+                    (CommonTokenStream.))
+         rule   (.index (.getRule grammar root))
+         parser (.createParserInterpreter grammar tokens)]
+     {:tree (.parse parser rule)
+      :parser parser})))

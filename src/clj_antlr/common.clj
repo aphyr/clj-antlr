@@ -6,6 +6,7 @@
            (org.antlr.v4.runtime ANTLRInputStream
                                  CommonTokenStream
                                  Parser)
+           (org.antlr.v4.tool Grammar)
            (org.antlr.v4.runtime.tree Tree
                                       ParseTree
                                       ParseTreeWalker
@@ -82,6 +83,11 @@
   "The text of a node."
   [^ParseTree node]
   (.getText node))
+
+(defn first-rule
+  "The name of the first rule in a grammar."
+  [^Grammar grammar]
+  (aget (.getRuleNames grammar) 0))
 
 (defn parser-rule-name
   "Given a parser and an integer rule index, returns the string name of that
