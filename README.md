@@ -41,11 +41,11 @@ represented as strings.
 
 ## Where can I find grammars?
 
-[https://github.com/antlr/grammars-v4](Here's a ton of real-world parsers for various languages!)
+[Here's a ton of ANTLR 4 parsers for various languages!](https://github.com/antlr/grammars-v4)
 
 ## Faster?
 
-On a real-world 3.5KB JSON object, clj-antlr4 with a straightforward JSON
+On a real-world 3.5KB JSON object, clj-antlr with a straightforward JSON
 grammar is about 70 times faster than an identical AST built by an Instaparse
 grammar.
 
