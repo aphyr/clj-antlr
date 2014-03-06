@@ -1,7 +1,8 @@
 # Clj-Antlr
 
 Clojure bindings for the [Antlr 4](http://www.antlr.org/) parser library, an
-adaptive LL(\*) parser. Looks a lot like Instaparse, only much faster, with
+adaptive LL(\*) parser. Looks a lot like
+[Instaparse](https://github.com/Engelberg/instaparse), only much faster, with
 richer grammar definitions, and none of Instaparse's delightful features.
 
 ## Installation
