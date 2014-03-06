@@ -1,66 +1,85 @@
-# clj-antlr
+# Clj-Antlr
 
-Clojure bindings for the Antlr 4 parser library. Uses all kinds of evil macro
-tricks to turn small Clojure mappings into full parse tree transformations.
+Clojure bindings for the [Antlr 4](http://www.antlr.org/) parser library, an
+adaptive LL(\*) parser. Looks a lot like Instaparse, only much faster, and
+with far fewer features.
 
 ## Installation
 
-Add the latest release from https://clojars.org/clj-antlr to your project.clj.
+Just add clj-antlr to your project.clj, and load a grammar file at runtime.
+
+No Antlr installation is required; clj-antlr will load the grammar for you, no
+compilation needed. No macros, either! Running the parser in interpreted mode
+is a tad slower than the compiled parsers that Antlr can emit, but means a lot
+less hassle for folks to get started.
 
 ## Usage
 
-clj-antlr wraps the normal antlr-generated java classes, using reflection and macros to build parse tree visitors. Take a look at demo/src for example EDN and JSON parsers. The general form is:
-
-0. Add src/java to `:java-source-paths` in `project.clj`.
-1. Write or find a .g4 grammar; e.g. `Json.g4`, and drop it in `src/java/`.
-2. Compile the grammar with antlr4, as usual. This will spew a bunch of .java
-   files into `src/java/`.
-3. Include `clj-antlr.core` and your parser types (`JsonVisitor`, `JsonLexer`,
-   etc.) in your namespace.
-4. Define a parse tree visitor using `(visitor)`.
-5. Use `visit-string` with your lexer, parser, and visitor, to turn a string
-   into a data structure.
-
-Take a look at `demo/src/clj_antlr_demo/json.clj` or `edn.clj` for an example;
-it'll be much clearer. :)
-
-## What are visitors?
-
-A Visitor, in the context of Antlr, is something which starts at the root of a parse tree and recursively walks it, possibly descending into child nodes; it returns a value for each tree node.
-
-You could write a ton of Java boilerplate to do this, but clj-antlr makes the
-common case easy. You define a visitor using the `visitor` macro, which takes
-the visitor base class for your grammar, followed by several pattern-matching
-forms. Each form is a list beginning with the type of node being visited,
-followed by an argument vector which receives the visitor itself and the
-current parse context.
-
 ```clj
-(visitor JsonVisitor
-  ; When you visit a JsonObject, run this code:
-  (JsonObject [this context]
-    ; visit the object child node, and return that value.
-    (visit this (.object context))))
-
-  ; Nodes with repeated children are exposed as sequences:
-  (Array [t c] (map (partial visit t) (.value c)))
-
-  ; (text context) returns the string belonging to a given parse node:
-  ; in this case, a string like "hello\n".
-  (ValueString [t c] (read-json-string (text c)))
-
-  ; Or you can simply return literals
-  (valueTrue [t c] true))
+user=> (require ['clj-antlr.core :as 'antlr])
+nil
+user=> (def json (antlr/parser "grammars/Json.g4"))
+#'user/json
+user=> (pprint (json "[1,2,3]"))
+(:jsonText
+ (:jsonArray
+  "["
+  (:jsonValue (:jsonNumber "1"))
+  ","
+  (:jsonValue (:jsonNumber "2"))
+  ","
+  (:jsonValue (:jsonNumber "3"))
+  "]"))
 ```
 
-If you don't specify how to interpret a given node, clj-antlr will use
-reflection and some heuristics to make up a sensible default; for instance,
-returning a map of child names to their values. Exactly *what* kind of data
-structures it returns is probably going to change; I'd treat it only as a
-convenient scaffolding for experiments.
+Parsers act like functions, and can take strings, InputStreams, and Readers as
+their arguments. They emit trees of lists: each list begins with the keyword
+node name, and is followed by the nodes' children. Terminal nodes are
+represented as strings.
+
+## Where can I find grammars?
+
+[https://github.com/antlr/grammars-v4](Here's a ton of real-world parsers for various languages!)
+
+## Faster?
+
+On a real-world 3.5KB JSON object, clj-antlr4 with a straightforward JSON
+grammar is about 70 times faster than an identical AST built by an Instaparse
+grammar.
+
+```
+kingsbury@hackbook:~/clj-antlr master$ lein test :perf
+
+lein test clj-antlr.perf-test
+Benchmarking instaparse
+WARNING: Final GC required 1.6149652300025767 % of runtime
+Evaluation count : 720 in 60 samples of 12 calls.
+             Execution time mean : 90.875875 ms
+    Execution time std-deviation : 4.531521 ms
+   Execution time lower quantile : 88.121389 ms ( 2.5%)
+   Execution time upper quantile : 98.868433 ms (97.5%)
+                   Overhead used : 10.399571 ns
+
+Found 10 outliers in 60 samples (16.6667 %)
+  low-severe   2 (3.3333 %)
+  low-mild   8 (13.3333 %)
+ Variance from outliers : 35.2586 % Variance is moderately inflated by outliers
+
+
+Benchmarking clj-antlr
+Evaluation count : 46140 in 60 samples of 769 calls.
+             Execution time mean : 1.318649 ms
+    Execution time std-deviation : 21.488349 µs
+   Execution time lower quantile : 1.287781 ms ( 2.5%)
+   Execution time upper quantile : 1.356745 ms (97.5%)
+                   Overhead used : 10.399571 ns
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
+```
 
 ## License
 
-Copyright © 2013 Kyle Kingsbury <aphyr@aphyr.com>
+Copyright © 2014 Kyle Kingsbury <aphyr@aphyr.com>
 
 Distributed under the Eclipse Public License, the same as Clojure.
