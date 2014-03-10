@@ -6,6 +6,7 @@
                               Grammar)
            (org.antlr.v4.runtime CommonTokenStream
                                  LexerInterpreter
+                                 Parser
                                  ParserInterpreter)
            (org.antlr.v4.runtime.tree ParseTree)))
 
@@ -26,6 +27,18 @@
                     (.createLexerInterpreter (common/input-stream input))
                     (CommonTokenStream.))
          rule   (.index (.getRule grammar root))
-         parser (.createParserInterpreter grammar tokens)]
-     {:tree (.parse parser rule)
-      :parser parser})))
+         ^ParserInterpreter parser (.createParserInterpreter grammar tokens)
+         error-listener (common/error-listener)]
+
+     ; Set up parser
+     (doto parser
+       (.removeErrorListeners)
+       (.addErrorListener error-listener))
+
+     ; Parse
+     (let [tree (.parse parser rule)]
+       (when-let [errors (seq @error-listener)]
+         (throw (common/parse-error errors)))
+
+       {:tree   tree
+        :parser parser}))))

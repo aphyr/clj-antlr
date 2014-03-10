@@ -1,11 +1,15 @@
 (ns clj-antlr.common
   "Common functions for building and using parsers."
+  (:require [clojure.string :as string])
   (:import (java.io InputStream
                     Reader)
            (java.util.concurrent ConcurrentHashMap)
+           (clj_antlr ParseError)
            (org.antlr.v4.runtime ANTLRInputStream
                                  CommonTokenStream
-                                 Parser)
+                                 Parser
+                                 Recognizer
+                                 ANTLRErrorListener)
            (org.antlr.v4.tool Grammar)
            (org.antlr.v4.runtime.tree Tree
                                       ParseTree
@@ -94,3 +98,66 @@
   rule."
   [^Parser parser ^long index]
   (aget (.getRuleNames parser) index))
+
+(defn parse-error
+  "Constructs a new ParseError exception with a list of errors."
+  [errors]
+  (ParseError. errors
+               (string/join "\n" (map :message errors))))
+
+(defn error-listener
+  "A stateful error listener which accretes parse errors in a deref-able
+  structure."
+  []
+  (let [errors (atom [])]
+    (reify
+      clojure.lang.IDeref
+      (deref [this] (deref errors))
+
+      ANTLRErrorListener
+      (reportAmbiguity [this
+                        parser
+                        dfa
+                        start-index
+                        stop-idex
+                        exact
+                        ambig-alts
+                        configs]
+        ; TODO
+        )
+
+      (reportAttemptingFullContext [this
+                                    parser
+                                    dfa
+                                    start-index
+                                    stop-index
+                                    conflicting-alts
+                                    configs])
+
+      (reportContextSensitivity [this
+                                 parser
+                                 dfa
+                                 start-index
+                                 stop-index
+                                 prediction
+                                 configs])
+
+      (syntaxError [this
+                    recognizer
+                    offending-symbol
+                    line
+                    char
+                    message
+                    e]
+        (let [err {:symbol   offending-symbol
+                   :line     line
+                   :char     char
+                   :message  message}
+              err (if e
+                    (assoc err
+                           :rule     (.getCtx e)
+                           :state    (.getOffendingState e)
+                           :expected (.getExpectedTokens e)
+                           :token    (.getOffendingToken e))
+                    err)]
+        (swap! errors conj err))))))

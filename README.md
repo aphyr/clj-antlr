@@ -1,6 +1,6 @@
 # Clj-Antlr
 
-Clojure bindings for the [Antlr 4](http://www.antlr.org/) parser library, an
+Clojure bindings for the [ANTLR 4](http://www.antlr.org/) parser library, an
 adaptive LL(\*) parser. Looks a lot like
 [Instaparse](https://github.com/Engelberg/instaparse), only much faster, with
 richer grammar definitions, and none of Instaparse's delightful features.
@@ -10,7 +10,7 @@ richer grammar definitions, and none of Instaparse's delightful features.
 Just [add clj-antlr to your project.clj](https://clojars.org/clj-antlr), and
 load a grammar file at runtime.
 
-No Antlr installation is required; clj-antlr will load the grammar for you, no
+No ANTLR installation is required; clj-antlr will load the grammar for you, no
 compilation needed. No macros, either! Running the parser in interpreted mode
 is a tad slower than the compiled parsers that Antlr can emit, but means a lot
 less hassle for folks to get started.
@@ -38,6 +38,45 @@ Parsers act like functions, and can take strings, InputStreams, and Readers as
 their arguments. They emit trees of lists: each list begins with the keyword
 node name, and is followed by the nodes' children. Terminal nodes are
 represented as strings.
+
+## Errors
+
+ANTLR can recover from errors in mid-parse by performing single-token insertion
+and single-token deletion on mismatched error tokens, where possible. This
+means an ANTLR parse may throw an error, but still produce useful parse
+information; or produce *multiple* errors.  Parsing an invalid string will
+throw an exception with a textual explanation of the errors encountered:
+
+```clj
+user=> (json "[1,2,,3,]")
+
+ParseError extraneous input ',' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRING}
+mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRING}  clj-antlr.common/parse-error (common.clj:106)
+```
+
+But wait, there's more! ParseErrors are deref-able, yielding detailed debugging
+information:
+
+```clj
+user=> (try (json "[1,2,,3,]") (catch clj_antlr.ParseError e (pprint @e)))
+({:symbol #<CommonToken [@5,5:5=',',<4>,1:5]>,
+  :line 1,
+  :char 5,
+  :message
+  "extraneous input ',' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRING}"}
+ {:token #<CommonToken [@8,8:8=']',<1>,1:8]>,
+  :expected #<IntervalSet {2..3, 5, 7, 9..10, 12}>,
+  :state 25,
+  :rule #<InterpreterRuleContext [51 15]>,
+  :symbol #<CommonToken [@8,8:8=']',<1>,1:8]>,
+  :line 1,
+  :char 8,
+  :message
+  "mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRING}"})
+```
+
+You can use the line and char numbers, in addition to the messages, to guide
+the user in generating correct syntax.
 
 ## Where can I find grammars?
 
