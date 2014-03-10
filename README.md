@@ -68,6 +68,7 @@ user=> (try (json "[1,2,,3,]") (catch clj_antlr.ParseError e (pprint @e)))
   :expected #<IntervalSet {2..3, 5, 7, 9..10, 12}>,
   :state 25,
   :rule #<InterpreterRuleContext [51 15]>,
+  :stack ("jsonText" "jsonArray" "jsonValue"),
   :symbol #<CommonToken [@8,8:8=']',<1>,1:8]>,
   :line 1,
   :char 8,
@@ -76,7 +77,29 @@ user=> (try (json "[1,2,,3,]") (catch clj_antlr.ParseError e (pprint @e)))
 ```
 
 You can use the line and char numbers, in addition to the messages, to guide
-the user in generating correct syntax.
+the user in generating correct syntax. Clj-antlr handles both lexer and parser
+errors; though the debugging information available at different passes may
+vary.
+
+```clj
+user=> (try (json "⊂") (catch clj_antlr.ParseError e (pprint @e)))
+({:token nil,
+  :expected nil,
+  :state -1,
+  :rule nil,
+  :symbol nil,
+  :line 1,
+  :char 0,
+  :message "token recognition error at: '⊂'"}
+ {:token #<CommonToken [@0,1:0='<EOF>',<-1>,1:1]>,
+  :expected #<IntervalSet {3, 5}>,
+  :state 16,
+  :rule #<InterpreterRuleContext []>,
+  :symbol #<CommonToken [@0,1:0='<EOF>',<-1>,1:1]>,
+  :line 1,
+  :char 1,
+  :message "no viable alternative at input '<EOF>'"})
+```
 
 ## Where can I find grammars?
 

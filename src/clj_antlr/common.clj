@@ -101,8 +101,9 @@
 
 (defn parse-error
   "Constructs a new ParseError exception with a list of errors."
-  [errors]
+  [errors tree]
   (ParseError. errors
+               tree
                (string/join "\n" (map :message errors))))
 
 (defn error-listener
@@ -153,11 +154,20 @@
                    :line     line
                    :char     char
                    :message  message}
+              err (if (isa? Parser recognizer)
+                    (assoc err :stack (->> ^Parser recognizer
+                                           .getRuleInvocationStack
+                                           reverse))
+                    err)
               err (if e
                     (assoc err
                            :rule     (.getCtx e)
                            :state    (.getOffendingState e)
-                           :expected (.getExpectedTokens e)
+                           :expected (try (.getExpectedTokens e)
+                                          (catch IllegalArgumentException e
+                                            ; I think ANTLR throws here for
+                                            ; tokenizer errors.
+                                            nil))
                            :token    (.getOffendingToken e))
                     err)]
         (swap! errors conj err))))))

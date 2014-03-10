@@ -23,22 +23,25 @@
   ([grammar input]
    (parse grammar input (common/first-rule grammar)))
   ([^Grammar grammar input ^String root]
-   (let [tokens (-> grammar
-                    (.createLexerInterpreter (common/input-stream input))
-                    (CommonTokenStream.))
-         rule   (.index (.getRule grammar root))
-         ^ParserInterpreter parser (.createParserInterpreter grammar tokens)
-         error-listener (common/error-listener)]
-
-     ; Set up parser
-     (doto parser
-       (.removeErrorListeners)
-       (.addErrorListener error-listener))
+   (let [error-listener (common/error-listener)
+         ; Extract tokens
+         ^Lexer lexer   (doto (.createLexerInterpreter
+                                grammar (common/input-stream input))
+                          (.removeErrorListeners)
+                          (.addErrorListener error-listener))
+         tokens         (CommonTokenStream. lexer)
+         ; Where do we start matching?
+         rule           (.index (.getRule grammar root))
+         ; Create parser
+         ^ParserInterpreter parser (doto
+                                     (.createParserInterpreter grammar tokens)
+                                     (.removeErrorListeners)
+                                     (.addErrorListener error-listener))]
 
      ; Parse
      (let [tree (.parse parser rule)]
        (when-let [errors (seq @error-listener)]
-         (throw (common/parse-error errors)))
+         (throw (common/parse-error errors tree)))
 
        {:tree   tree
         :parser parser}))))
