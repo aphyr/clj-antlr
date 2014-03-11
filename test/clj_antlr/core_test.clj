@@ -39,4 +39,24 @@
                "extraneous input ',' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRING}
 mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRING}"))
         (is (= (map :line @err) [1 1]))
-        (is (= (map :char @err) [5 8]))))))
+        (is (= (map :char @err) [5 8]))))
+
+    (testing "parsing invalid text without throwing"
+      (let [t (parse json {:throw? false} "[1,2,cat]")]
+        (is (= t '(:jsonText
+                    (:jsonArray
+                      "["
+                      (:jsonValue (:jsonNumber "1"))
+                      ","
+                      (:jsonValue (:jsonNumber "2"))
+                      ","
+                      (:jsonValue)))))
+        (is (= (first (:errors (meta t)))
+               {:token nil,
+                :expected nil,
+                :state -1,
+                :rule nil,
+                :symbol nil,
+                :line 1,
+                :char 5,
+                :message "token recognition error at: 'c'"}))))))

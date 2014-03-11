@@ -34,4 +34,5 @@
 
   (:json (:object \"{\" (:pair \"age\" \":\" (:value \"53\"))))"
   [m]
-  (sexpr (:tree m) (:parser m)))
+  (vary-meta (sexpr (:tree m) (:parser m))
+             assoc :errors (:errors m)))

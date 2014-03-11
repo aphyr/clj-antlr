@@ -101,6 +101,34 @@ user=> (try (json "⊂") (catch clj_antlr.ParseError e (pprint @e)))
   :message "no viable alternative at input '<EOF>'"})
 ```
 
+clj-antlr will still produce parse trees from invalid input. Use the {:throw?
+false} option, either when constructing the parser, or as an argument to the
+`parse` function.
+
+```clj
+user=> (->> "[1,2" (antlr/parse json {:throw? false}) pprint)
+(:jsonText
+ (:jsonArray
+  "["
+  (:jsonValue (:jsonNumber "1"))
+  ","
+  (:jsonValue (:jsonNumber "2"))))
+```
+
+Any parse errors will be available as metadata on the returned tree:
+
+```clj
+user=> (->> "[1,2" (antlr/parse json {:throw? false}) meta :errors pprint)
+({:token #<CommonToken [@4,4:3='<EOF>',<-1>,1:4]>,
+  :expected #<IntervalSet {1, 4}>,
+  :state 54,
+  :rule #<InterpreterRuleContext [15]>,
+  :symbol #<CommonToken [@4,4:3='<EOF>',<-1>,1:4]>,
+  :line 1,
+  :char 4,
+  :message "no viable alternative at input '<EOF>'"})
+```
+
 ## Where can I find grammars?
 
 [Here's a ton of ANTLR 4 parsers for various languages!](https://github.com/antlr/grammars-v4)

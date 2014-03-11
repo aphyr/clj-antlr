@@ -12,15 +12,24 @@
 
 (defn parse
   "Parses a string, reader, or inputstream using the given parser, and returns
-  a data structure."
-  [^Parser parser input]
-  (coerce/tree->sexpr
-    (if-let [root (:root (.opts parser))]
-      (interpreted/parse (.grammar parser) input root)
-      (interpreted/parse (.grammar parser) input))))
+  a data structure. If options are passed, override the options given at parser
+  construction."
+  ([^Parser parser input]
+   (coerce/tree->sexpr
+     (interpreted/parse (.grammar parser) (.opts parser) input)))
+  ([^Parser parser opts input]
+   (coerce/tree->sexpr
+     (interpreted/parse (.grammar parser)
+                        (merge (.opts parser)
+                               opts)
+                        input))))
 
 (defn parser
-  "Constructs a new parser. Takes a filename for an Antlr v4 grammar."
+  "Constructs a new parser. Takes a filename for an Antlr v4 grammar. Options:
+
+  :root   The string name of the rule to begin parsing. Defaults to the
+          first rule in the grammar.
+  :throw? If truthy, parse errors will be thrown. Defaults true."
   ([filename]
    (parser filename {}))
   ([filename opts]

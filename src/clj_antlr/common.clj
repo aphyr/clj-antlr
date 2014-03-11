@@ -108,12 +108,13 @@
 
 (defn error-listener
   "A stateful error listener which accretes parse errors in a deref-able
-  structure."
+  structure. Deref returns nil if there are no errors; else a sequence of
+  heterogenous maps, depending on what debugging information is available."
   []
   (let [errors (atom [])]
     (reify
       clojure.lang.IDeref
-      (deref [this] (deref errors))
+      (deref [this] (seq (deref errors)))
 
       ANTLRErrorListener
       (reportAmbiguity [this

@@ -16,14 +16,13 @@
   (Grammar/load filename))
 
 (defn parse
-  "Given a Grammar, text to parse (a string, reader, or inputstream), and an
-  optional root node to parse from, returns a map of the Parser and ParseTree
-  for the input. If no root node is given, chooses the first rule from the
-  grammar."
-  ([grammar input]
-   (parse grammar input (common/first-rule grammar)))
-  ([^Grammar grammar input ^String root]
+  "Given a Grammar, options, and text to parse (a string, reader, or
+  inputstream), returns a map of the :parser, :tree, and :errors for the
+  input."
+  ([^Grammar grammar opts input]
    (let [error-listener (common/error-listener)
+         ; Root node to start at
+         ^String root (or (:root opts) (common/first-rule grammar))
          ; Extract tokens
          ^Lexer lexer   (doto (.createLexerInterpreter
                                 grammar (common/input-stream input))
@@ -40,8 +39,11 @@
 
      ; Parse
      (let [tree (.parse parser rule)]
-       (when-let [errors (seq @error-listener)]
+       ; Throw errors unles requested not to
+       (when-let [errors (and (get opts :throw? true)
+                              @error-listener)]
          (throw (common/parse-error errors tree)))
 
        {:tree   tree
+        :errors @error-listener
         :parser parser}))))
