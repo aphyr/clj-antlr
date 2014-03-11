@@ -27,9 +27,15 @@
 (defn parser
   "Constructs a new parser. Takes a filename for an Antlr v4 grammar. Options:
 
-  :root   The string name of the rule to begin parsing. Defaults to the
-          first rule in the grammar.
-  :throw? If truthy, parse errors will be thrown. Defaults true."
+  :root             The string name of the rule to begin parsing. Defaults to
+                    the first rule in the grammar.
+
+  :throw?           If truthy, parse errors will be thrown. Defaults true.
+
+  :case-sensitive?  Whether the lexer must match the exact case of characters.
+                    Defaults true. If false, the tokenizer will only receive
+                    lowercase characters. The generated parse tree will still
+                    retain the case of the original text."
   ([filename]
    (parser filename {}))
   ([filename opts]

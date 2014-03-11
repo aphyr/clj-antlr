@@ -129,6 +129,43 @@ user=> (->> "[1,2" (antlr/parse json {:throw? false}) meta :errors pprint)
   :message "no viable alternative at input '<EOF>'"})
 ```
 
+## Options
+
+All options may be passed at parser construction time:
+
+```clj
+user=> (antlr/parse (antlr/parser "grammars/Cadr.g4" {:case-sensitive? false})
+                    "CdDr")
+(:cadr "C" "d" "D" "r")
+```
+
+... and also overridden at parse time via `antlr.core/parse`:
+
+```
+user=> (antlr/parse (antlr/parser "grammars/Cadr.g4")
+                    {:case-sensitive? false}
+                    "CdDr")
+(:cadr "C" "d" "D" "r")
+```
+
+```clj
+user=> (doc antlr/parser)
+-------------------------
+clj-antlr.core/parser
+([filename] [filename opts])
+  Constructs a new parser. Takes a filename for an Antlr v4 grammar. Options:
+
+  :root             The string name of the rule to begin parsing. Defaults to
+                    the first rule in the grammar.
+
+  :throw?           If truthy, parse errors will be thrown. Defaults true.
+
+  :case-sensitive?  Whether the lexer must match the exact case of characters.
+                    Defaults true. If false, the tokenizer will only receive
+                    lowercase characters. The generated parse tree will still
+                    retain the case of the original text.
+```
+
 ## Where can I find grammars?
 
 [Here's a ton of ANTLR 4 parsers for various languages!](https://github.com/antlr/grammars-v4)

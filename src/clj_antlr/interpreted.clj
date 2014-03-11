@@ -21,16 +21,22 @@
   input."
   ([^Grammar grammar opts input]
    (let [error-listener (common/error-listener)
+
          ; Root node to start at
-         ^String root (or (:root opts) (common/first-rule grammar))
+         ^String root   (or (:root opts) (common/first-rule grammar))
+         rule           (.index (.getRule grammar root))
+
+         ; Input stream
+         input-stream (if (get opts :case-sensitive? true)
+                        (common/input-stream input)
+                        (common/case-insensitive-input-stream input))
+
          ; Extract tokens
-         ^Lexer lexer   (doto (.createLexerInterpreter
-                                grammar (common/input-stream input))
+         ^Lexer lexer   (doto (.createLexerInterpreter grammar input-stream)
                           (.removeErrorListeners)
                           (.addErrorListener error-listener))
          tokens         (CommonTokenStream. lexer)
-         ; Where do we start matching?
-         rule           (.index (.getRule grammar root))
+
          ; Create parser
          ^ParserInterpreter parser (doto
                                      (.createParserInterpreter grammar tokens)
@@ -39,7 +45,7 @@
 
      ; Parse
      (let [tree (.parse parser rule)]
-       ; Throw errors unles requested not to
+       ; Throw errors unless requested not to
        (when-let [errors (and (get opts :throw? true)
                               @error-listener)]
          (throw (common/parse-error errors tree)))

@@ -6,6 +6,7 @@
            (java.util.concurrent ConcurrentHashMap)
            (clj_antlr ParseError)
            (org.antlr.v4.runtime ANTLRInputStream
+                                 CaseInsensitiveInputStream
                                  CommonTokenStream
                                  Parser
                                  Recognizer
@@ -50,6 +51,14 @@
   [s]
   (multi-hinted-let [hinted s [InputStream Reader String]]
                     (ANTLRInputStream. hinted)))
+
+(defn case-insensitive-input-stream
+  "Constructs an ANTLRInputStream out of a string. Presents all characters to
+  the lexer as lowercase, but getText methods will return the original string.
+  Adapted from https://gist.github.com/sharwell/9424666. Consumes memory
+  proportional to the input string."
+  [input]
+  (CaseInsensitiveInputStream. input))
 
 (defn tokens
   "A token stream taken from a lexer."
@@ -172,3 +181,4 @@
                            :token    (.getOffendingToken e))
                     err)]
         (swap! errors conj err))))))
+

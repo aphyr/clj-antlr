@@ -59,4 +59,22 @@ mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRIN
                 :symbol nil,
                 :line 1,
                 :char 5,
-                :message "token recognition error at: 'c'"}))))))
+                :message "token recognition error at: 'c'"}))))
+
+    (testing "skipping garbage at end of parse"
+      (let [t (parse json {:throw? false} "[1,2,3] foo {}")]
+        (is (= t '(:jsonText
+                    (:jsonArray
+                      "["
+                      (:jsonValue (:jsonNumber "1"))
+                      ","
+                      (:jsonValue (:jsonNumber "2"))
+                      ","
+                      (:jsonValue (:jsonNumber "3"))
+                      "]"))))))))
+
+(deftest case-insensitive-test
+  (let [cadr (parser "grammars/Cadr.g4")]
+    (is (thrown? ParseError (parse cadr "CAR")))
+    (is (= (parse cadr {:case-sensitive? false} "CAR")
+           '(:cadr "C" "A" "R")))))
