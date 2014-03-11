@@ -214,6 +214,8 @@ Ran 1 tests containing 1 assertions.
 
 ## License
 
-Copyright © 2014 Kyle Kingsbury <aphyr@aphyr.com>
+Copyright © 2014 Kyle Kingsbury <aphyr@aphyr.com>, and Factual, Inc. Includes
+ANTLR code under the BSD 3-clause license, written by Terence Parr and Sam
+Harwell.  My sincerest appreciation to all ANTLR contributors as well. :)
 
 Distributed under the Eclipse Public License, the same as Clojure.
