@@ -24,7 +24,9 @@
 
          ; Root node to start at
          ^String root   (or (:root opts) (common/first-rule grammar))
-         rule           (.index (.getRule grammar root))
+         rule           (.getRule grammar root)
+         _              (assert rule)
+         rule           (.index rule)
 
          ; Input stream
          input-stream (if (get opts :case-sensitive? true)
