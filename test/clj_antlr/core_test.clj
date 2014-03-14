@@ -78,3 +78,8 @@ mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRIN
     (is (thrown? ParseError (parse cadr "CAR")))
     (is (= (parse cadr {:case-sensitive? false} "CAR")
            '(:cadr "C" "A" "R")))))
+
+(deftest format-test
+  (let [cadr (parser "grammars/Cadr.g4")]
+    (is (= (set (keys (parse cadr {:format :raw} "caddr")))
+           #{:tree :parser :errors}))))

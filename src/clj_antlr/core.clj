@@ -10,22 +10,35 @@
   (invoke [parser text]
     (parse parser text)))
 
+(defn parse*
+  "Helper for parse"
+  [parser opts input]
+  (let [formatter (condp = (:format opts)
+                    nil    coerce/tree->sexpr
+                    :sexp  coerce/tree->sexpr
+                    :raw   identity
+                           (:format opts))]
+    (formatter
+      (interpreted/parse (.grammar parser)
+                         opts
+                         input))))
+
 (defn parse
   "Parses a string, reader, or inputstream using the given parser, and returns
   a data structure. If options are passed, override the options given at parser
   construction."
   ([^Parser parser input]
-   (coerce/tree->sexpr
-     (interpreted/parse (.grammar parser) (.opts parser) input)))
+   (parse* parser (.opts parser) input))
   ([^Parser parser opts input]
-   (coerce/tree->sexpr
-     (interpreted/parse (.grammar parser)
-                        (merge (.opts parser)
-                               opts)
-                        input))))
+   (parse* parser (merge (.opts parser) opts) input)))
 
 (defn parser
   "Constructs a new parser. Takes a filename for an Antlr v4 grammar. Options:
+
+  :format           The parse tree to generate. One of:
+                      :sexpr (default)  Nested lists, node names first
+                      :raw              Equivalent to identity
+                      <any function>    Takes a map of {:tree, :parser, etc}
 
   :root             The string name of the rule to begin parsing. Defaults to
                     the first rule in the grammar.
