@@ -39,6 +39,18 @@ their arguments. They emit trees of lists: each list begins with the keyword
 node name, and is followed by the nodes' children. Terminal nodes are
 represented as strings.
 
+You can define parsers directly with strings, too. ANTLR 4.2 will complain but compile successfully; 4.2.1 will include a patch to fix that.
+
+```clj
+user=> (def aaa (antlr/parser "grammar Aaa;
+  #_=>                         aaa : AA+;
+  #_=>                         AA : [Aa]+ ;
+  #_=>                         WS : ' ' -> channel(HIDDEN) ;"))
+#'user/aaa
+user=> (aaa "aAAaa A aAA AAAAaAA")
+(:aaa "aAAaa" "A" "aAA" "AAAAaAA")
+```
+
 ## Errors
 
 ANTLR can recover from errors in mid-parse by performing single-token insertion

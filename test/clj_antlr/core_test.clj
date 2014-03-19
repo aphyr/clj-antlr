@@ -25,6 +25,11 @@
                       "]")))
                 "}"))))))
 
+(deftest string-grammar-test
+  (let [cadr (parser (slurp "grammars/Cadr.g4"))]
+    (is (= (cadr "cdr")
+           '(:cadr "c" "d" "r")))))
+
 (deftest error-test
   (let [json (parser "grammars/Json.g4")]
     (testing "throws on tokenization errors"
