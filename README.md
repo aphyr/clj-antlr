@@ -141,7 +141,7 @@ user=> (->> "[1,2" (antlr/parse json {:throw? false}) meta :errors pprint)
   :message "no viable alternative at input '<EOF>'"})
 ```
 
-*sometimes*, clj-antlr is able to identify invalid rules in the parse tree, and
+*Sometimes*, clj-antlr is able to identify invalid rules in the parse tree, and
 wrap them with a `:clj-antlr/error` node.
 
 ```clj
