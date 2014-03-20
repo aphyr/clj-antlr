@@ -19,11 +19,19 @@
 
 (defn sexpr [^ParseTree t ^Parser p]
   (if (instance? ParserRuleContext t)
-    (cons (->>
-            (.getRuleIndex ^ParserRuleContext t)
-            (c/parser-rule-name p)
-            c/fast-keyword)
-          (doall (map #(sexpr % p) (c/children t))))
+    (let [node (cons (->>
+                       (.getRuleIndex ^ParserRuleContext t)
+                       (c/parser-rule-name p)
+                       c/fast-keyword)
+                     (doall (map #(sexpr % p) (c/children t))))]
+      ; If there was a recognition error, we'll wrap the node in an ::error
+      ; and drop the exception in the metadata.
+      (if-let [e (.exception ^ParserRuleContext t)]
+        (with-meta (list :clj-antlr/error node)
+                   {:error (c/recognition-exception->map e)})
+        node))
+
+    ; Text literal
     (.getText t)))
 
 (defn tree->sexpr

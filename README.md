@@ -141,6 +141,42 @@ user=> (->> "[1,2" (antlr/parse json {:throw? false}) meta :errors pprint)
   :message "no viable alternative at input '<EOF>'"})
 ```
 
+*sometimes*, clj-antlr is able to identify invalid rules in the parse tree, and
+wrap them with a `:clj-antlr/error` node.
+
+```clj
+user=> (->> "[1, {\"foo\"::}, 3]" (antlr/parse json {:throw? false}) pprint)
+(:jsonText
+ (:jsonArray
+  "["
+  (:jsonValue (:jsonNumber "1"))
+  ","
+  (:jsonValue
+   (:jsonObject
+    "{"
+    (:member "\"foo\"" ":" (:clj-antlr/error (:jsonValue ":")))
+    "}"))
+  ","
+  (:jsonValue (:jsonNumber "3"))
+  "]"))
+```
+
+But not always. This input generates errors in the top-level :errors metadata
+map, but creates an invalid parse tree without any error nodes. I think this is
+a bug in clj-antlr or ANTLR itself; if you have suggestions, I'd like to hear
+them.
+
+```clj
+user=> (->> "[1,,3]" (antlr/parse json {:throw? false}) pprint)
+(:jsonText
+ (:jsonArray
+  "["
+  (:jsonValue (:jsonNumber "1"))
+  ","
+  (:jsonValue "," (:jsonNumber "3"))
+  "]"))
+```
+
 ## Options
 
 All options may be passed at parser construction time:

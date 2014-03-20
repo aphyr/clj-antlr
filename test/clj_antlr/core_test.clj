@@ -49,13 +49,14 @@ mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRIN
     (testing "parsing invalid text without throwing"
       (let [t (parse json {:throw? false} "[1,2,cat]")]
         (is (= t '(:jsonText
-                    (:jsonArray
-                      "["
-                      (:jsonValue (:jsonNumber "1"))
-                      ","
-                      (:jsonValue (:jsonNumber "2"))
-                      ","
-                      (:jsonValue)))))
+                    (:clj-antlr/error
+                      (:jsonArray
+                        "["
+                        (:jsonValue (:jsonNumber "1"))
+                        ","
+                        (:jsonValue (:jsonNumber "2"))
+                        ","
+                        (:clj-antlr/error (:jsonValue)))))))
         (is (= (first (:errors (meta t)))
                {:token nil,
                 :expected nil,
@@ -77,6 +78,26 @@ mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRIN
                       ","
                       (:jsonValue (:jsonNumber "3"))
                       "]"))))))))
+
+(deftest error-tagging-test
+  "Should produce maximally valid trees, with errors constrained where recovery
+  is possible."
+  (let [json (parser "grammars/Json.g4" {:throw? false})
+        tree (json   "[1, {\"sub\": map}, 4]")]
+    (is (= tree
+           '(:jsonText
+              (:jsonArray
+                "["
+                (:jsonValue (:jsonNumber "1"))
+                ","
+                (:jsonValue
+                  (:jsonObject
+                    "{"
+                    (:member "\"sub\"" ":" (:clj-antlr/error (:jsonValue)))
+                    "}"))
+                ","
+                (:jsonValue (:jsonNumber "4"))
+                "]"))))))
 
 (deftest case-insensitive-test
   (let [cadr (parser "grammars/Cadr.g4")]

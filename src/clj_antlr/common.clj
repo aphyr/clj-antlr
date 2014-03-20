@@ -10,7 +10,8 @@
                                  CommonTokenStream
                                  Parser
                                  Recognizer
-                                 ANTLRErrorListener)
+                                 ANTLRErrorListener
+                                 RecognitionException)
            (org.antlr.v4.tool Grammar)
            (org.antlr.v4.runtime.tree Tree
                                       ParseTree
@@ -115,6 +116,18 @@
                tree
                (string/join "\n" (map :message errors))))
 
+(defn recognition-exception->map
+  "Converts a RecognitionException to a nice readable map."
+  [^RecognitionException e]
+  {:rule     (.getCtx e)
+   :state    (.getOffendingState e)
+   :expected (try (.getExpectedTokens e)
+                  (catch IllegalArgumentException e
+                    ; I think ANTLR throws here for
+                    ; tokenizer errors.
+                    nil))
+   :token    (.getOffendingToken e)})
+
 (defn error-listener
   "A stateful error listener which accretes parse errors in a deref-able
   structure. Deref returns nil if there are no errors; else a sequence of
@@ -170,15 +183,6 @@
                                            reverse))
                     err)
               err (if e
-                    (assoc err
-                           :rule     (.getCtx e)
-                           :state    (.getOffendingState e)
-                           :expected (try (.getExpectedTokens e)
-                                          (catch IllegalArgumentException e
-                                            ; I think ANTLR throws here for
-                                            ; tokenizer errors.
-                                            nil))
-                           :token    (.getOffendingToken e))
+                    (merge err (recognition-exception->map e))
                     err)]
         (swap! errors conj err))))))
-
