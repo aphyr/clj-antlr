@@ -12,7 +12,7 @@
 
 (defn parse*
   "Helper for parse"
-  [parser opts input]
+  [^Parser parser opts input]
   (let [formatter (condp = (:format opts)
                     nil    coerce/tree->sexpr
                     :sexp  coerce/tree->sexpr
@@ -31,6 +31,14 @@
    (parse* parser (.opts parser) input))
   ([^Parser parser opts input]
    (parse* parser (merge (.opts parser) opts) input)))
+
+(defn tokens
+  "Instead of a parse tree, yields a sequence of tokens."
+  ([^Parser parser input]
+   (tokens parser {} input))
+  ([^Parser parser opts input]
+   (let [p (parse parser (assoc opts :format identity) input)]
+     (coerce/tokens->sexpr (:parser p) (:tokens p)))))
 
 (defn parser
   "Constructs a new parser. Takes a filename for an Antlr v4 grammar. Options:

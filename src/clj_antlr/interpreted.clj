@@ -73,5 +73,6 @@
          (throw (common/parse-error errors tree)))
 
        {:tree   tree
+        :tokens tokens
         :errors @error-listener
         :parser parser}))))

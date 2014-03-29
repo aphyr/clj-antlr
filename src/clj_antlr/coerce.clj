@@ -3,7 +3,9 @@
   (:import (org.antlr.v4.runtime.tree TerminalNode
                                       ParseTree)
            (org.antlr.v4.runtime ParserRuleContext
-                                 Parser)))
+                                 Parser
+                                 Token
+                                 CommonTokenStream)))
 
 ;(defprotocol Sexpr
 ;  "Coerces trees to hiccup-style structures."
@@ -33,6 +35,16 @@
 
     ; Text literal
     (.getText t)))
+
+(defn tokens->sexpr
+  "Takes a Parser and a CommonTokenStream and emits a lazy sequence of
+  (:SOME_TYPE \"str\") pairs for the tokens in the stream."
+  [^Parser parser ^CommonTokenStream tokens]
+  (->> tokens
+       .getTokens
+       (map (fn [^Token t]
+              (list (c/token-name parser (.getType t))
+                    (.getText t))))))
 
 (defn tree->sexpr
   "Takes a map with a :tree node and a :parser (required for interpreting the

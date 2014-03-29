@@ -105,9 +105,17 @@
 
 (defn parser-rule-name
   "Given a parser and an integer rule index, returns the string name of that
-  rule."
+  rule. Negative indexes map to nil."
   [^Parser parser ^long index]
-  (aget (.getRuleNames parser) index))
+  (when-not (neg? index)
+    (aget (.getRuleNames parser) index)))
+
+(defn token-name
+  "Given a parser and a token index, returns the string name of that token.
+  Negative indexes map to nil."
+  [^Parser parser ^long index]
+  (when-not (neg? index)
+    (aget (.getTokenNames parser) index)))
 
 (defn parse-error
   "Constructs a new ParseError exception with a list of errors."
