@@ -1,12 +1,14 @@
 (ns clj-antlr.interpreted
   "Interpreter for antlr grammars. Slightly slower, but easier to use than the
   full antlr compilation process."
-  (:require [clj-antlr.common :as common])
+  (:require [clj-antlr.common :as common]
+            [clj-antlr.proto  :as proto])
   (:import (org.antlr.v4 Tool)
            (org.antlr.v4.tool LexerGrammar
                               Grammar)
            (org.antlr.v4.parse ANTLRParser)
            (org.antlr.v4.runtime CommonTokenStream
+                                 Lexer
                                  LexerInterpreter
                                  Parser
                                  ParserInterpreter)
@@ -26,7 +28,7 @@
     (.process tool grammar false)
     grammar))
 
-(defn grammar
+(defn ^Grammar grammar
   "Loads a Grammar from a string filename, or a string containing a grammar
   inline. If the string contains newlines, interprets as a grammar string;
   otherwise as a filename."
@@ -34,6 +36,80 @@
   (if (re-find #"\n" grammar-or-filename)
     (load-string-grammar grammar-or-filename)
     (Grammar/load grammar-or-filename)))
+
+(defn rule-index
+  "Finds the index of the given rule in a grammar. Throws if the rule is not
+  present in the given grammar. Example
+
+  (rule-index my-grammar :address)"
+  [^Grammar grammar rule-name]
+  (common/rule-index grammar (or rule-name (common/first-rule grammar))))
+
+(defn lexer-interpreter
+  "Builds a new lexer interpreter around an empty input stream. Used to
+  initialize our parser, which will later reset and re-use this object
+  for speed."
+  [^Grammar grammar]
+  (.createLexerInterpreter grammar (common/input-stream "")))
+
+(defn parser-interpreter
+  "Builds a new parser interpreter around a given grammar and lexer."
+  [^Grammar grammar ^Lexer lexer]
+  (.createParserInterpreter grammar (common/tokens lexer)))
+
+(defn reset-lexer-interpreter!
+  "Prepares a lexer interpreter for a new run."
+  [^LexerInterpreter lexer error-listener input-stream]
+  (doto lexer
+    (.setInputStream input-stream)
+    (.reset)
+    (.removeErrorListeners)
+    (.addErrorListener error-listener)))
+
+(defn reset-parser-interpreter!
+  "Prepares a parser interpreter for a new run."
+  [^ParserInterpreter parser error-listener token-stream]
+  (doto parser
+    (.setTokenStream token-stream)
+    (.reset)
+    (.removeErrorListeners)
+    (.addErrorListener error-listener)))
+
+; Re-uses the same lexer and parser each time. Note that the :tokens and
+; :parser returned by (parse) may be mutated at any time; they should only be
+; used for static things like resolving token names.
+(defrecord SinglethreadedParser [^Grammar grammar
+                                 ^LexerInterpreter lexer
+                                 ^ParserInterpreter parser]
+  proto/Parser
+  (parse [p opts text]
+    (locking p ; lmao pretty sure returning tokens is a race condition
+               ; waiting to happen
+      (let [error-listener (common/error-listener)
+            input-stream   (common/input-stream text opts)]
+        (reset-lexer-interpreter! lexer error-listener input-stream)
+
+        (let [tokens (common/tokens lexer)]
+          (reset-parser-interpreter! parser error-listener tokens)
+
+          (let [tree (.parse parser (rule-index grammar (:root opts)))]
+            ; Throw errors unless requested not to
+            (when-let [errors (and (get opts :throw? true)
+                                   @error-listener)]
+              (throw (common/parse-error errors tree)))
+
+            {:tree   tree
+             :tokens tokens
+             :errors @error-listener
+             :parser parser}))))))
+
+(defn parser
+  "Construct a new parser."
+  ([filename]
+   (let [grammar      (grammar filename)
+         ^Lexer lexer (.createLexerInterpreter grammar (common/input-stream ""))
+         parser       (.createParserInterpreter grammar (common/tokens lexer))]
+     (SinglethreadedParser. grammar lexer parser))))
 
 (defn parse
   "Given a Grammar, options, and text to parse (a string, reader, or
@@ -57,7 +133,7 @@
          ^Lexer lexer   (doto (.createLexerInterpreter grammar input-stream)
                           (.removeErrorListeners)
                           (.addErrorListener error-listener))
-         tokens         (CommonTokenStream. lexer)
+         tokens         (common/tokens lexer)
 
          ; Create parser
          ^ParserInterpreter parser (doto

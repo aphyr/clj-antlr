@@ -1,42 +1,46 @@
 (ns clj-antlr.core
   "Parser frontend."
   (:require [clj-antlr.interpreted :as interpreted]
-            [clj-antlr.coerce :as coerce]))
+            [clj-antlr.coerce :as coerce]
+            [clj-antlr.proto :as proto]))
 
 (declare parse)
 
-(defrecord Parser [grammar opts]
+; Wraps an underlying parser with default opts.
+(defrecord ParserWrapper [parser opts]
+  proto/Parser
+  (parse [_ opts text]
+    (proto/parse parser opts text))
+
   clojure.lang.IFn
   (invoke [parser text]
     (parse parser text)))
 
 (defn parse*
   "Helper for parse"
-  [^Parser parser opts input]
+  [^ParserWrapper parser opts input]
   (let [formatter (condp = (:format opts)
                     nil    coerce/tree->sexpr
                     :sexp  coerce/tree->sexpr
                     :raw   identity
                            (:format opts))]
     (formatter
-      (interpreted/parse (.grammar parser)
-                         opts
-                         input))))
+      (proto/parse parser opts input))))
 
 (defn parse
   "Parses a string, reader, or inputstream using the given parser, and returns
   a data structure. If options are passed, override the options given at parser
   construction."
-  ([^Parser parser input]
+  ([^ParserWrapper parser input]
    (parse* parser (.opts parser) input))
-  ([^Parser parser opts input]
+  ([^ParserWrapper parser opts input]
    (parse* parser (merge (.opts parser) opts) input)))
 
 (defn tokens
   "Instead of a parse tree, yields a sequence of tokens."
-  ([^Parser parser input]
+  ([^ParserWrapper parser input]
    (tokens parser {} input))
-  ([^Parser parser opts input]
+  ([^ParserWrapper parser opts input]
    (let [p (parse parser (assoc opts :format identity) input)]
      (coerce/tokens->sexpr (:parser p) (:tokens p)))))
 
@@ -60,4 +64,4 @@
   ([filename]
    (parser filename {}))
   ([filename opts]
-   (Parser. (interpreted/grammar filename) opts)))
+   (ParserWrapper. (interpreted/parser filename) opts)))

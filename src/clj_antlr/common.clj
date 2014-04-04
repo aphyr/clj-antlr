@@ -47,7 +47,7 @@
          (throw (IllegalArgumentException. (str "No matching class for
                                                 " ~x " in " '~classes)))))))
 
-(defn input-stream
+(defn antlr-input-stream
   "Constructs an ANTLRInputStream out of a String, Reader, or InputStream."
   [s]
   (multi-hinted-let [hinted s [InputStream Reader String]]
@@ -60,6 +60,18 @@
   proportional to the input string."
   [input]
   (CaseInsensitiveInputStream. input))
+
+(defn input-stream
+  "Constructs an inputstream. With no options, calls antlr-input-stream. With
+  options:
+
+  :case-sensitive? true calls antlr-input-stream,
+                   false calls case-insensitive-input-stream"
+  ([s] (antlr-input-stream s))
+  ([s opts]
+   (if (get opts :case-sensitive? true)
+     (antlr-input-stream s)
+     (case-insensitive-input-stream s))))
 
 (defn tokens
   "A token stream taken from a lexer."
@@ -102,6 +114,15 @@
   "The name of the first rule in a grammar."
   [^Grammar grammar]
   (aget (.getRuleNames grammar) 0))
+
+(defn rule-index
+  "Given a grammar and the name of a rule, returns the integer index of that
+  rule."
+  [^Grammar grammar rule-name]
+  (let [rule (.getRule grammar ^String (name rule-name))]
+    (when-not rule
+      (throw (RuntimeException. (str "No such rule: " (pr-str rule-name)))))
+    (.index rule)))
 
 (defn parser-rule-name
   "Given a parser and an integer rule index, returns the string name of that

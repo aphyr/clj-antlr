@@ -108,4 +108,4 @@ mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRIN
 (deftest format-test
   (let [cadr (parser "grammars/Cadr.g4")]
     (is (= (set (keys (parse cadr {:format :raw} "caddr")))
-           #{:tree :parser :errors}))))
+           #{:tree :tokens :parser :errors}))))
