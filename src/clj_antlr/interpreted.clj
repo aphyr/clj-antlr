@@ -3,7 +3,8 @@
   full antlr compilation process."
   (:require [clj-antlr.common :as common]
             [clj-antlr.proto  :as proto])
-  (:import (org.antlr.v4 Tool)
+  (:import (java.lang ThreadLocal)
+           (org.antlr.v4 Tool)
            (org.antlr.v4.tool LexerGrammar
                               Grammar)
            (org.antlr.v4.parse ANTLRParser)
@@ -103,13 +104,28 @@
              :errors @error-listener
              :parser parser}))))))
 
+(defn singlethreaded-parser
+  "Creates a new single-threaded parser for a grammar."
+  [^Grammar grammar]
+  (let [^Lexer lexer (.createLexerInterpreter grammar (common/input-stream ""))
+        parser       (.createParserInterpreter grammar (common/tokens lexer))]
+     (SinglethreadedParser. grammar lexer parser)))
+
+; Wrapper for using the singlethreaded parser in multiple threads.
+(defrecord ThreadLocalParser [^ThreadLocal local grammar]
+  proto/Parser
+  (parse [_ opts text]
+    (let [parser (or (.get local)
+                     (let [parser (singlethreaded-parser grammar)]
+                       (.set local parser)
+                       parser))]
+      (proto/parse parser opts text))))
+
 (defn parser
   "Construct a new parser."
   ([filename]
-   (let [grammar      (grammar filename)
-         ^Lexer lexer (.createLexerInterpreter grammar (common/input-stream ""))
-         parser       (.createParserInterpreter grammar (common/tokens lexer))]
-     (SinglethreadedParser. grammar lexer parser))))
+   (ThreadLocalParser. (ThreadLocal.) (grammar filename))))
+;   (singlethreaded-parser (grammar filename))))
 
 (defn parse
   "Given a Grammar, options, and text to parse (a string, reader, or

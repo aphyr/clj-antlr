@@ -8,9 +8,11 @@
                  [org.antlr/antlr4 "4.2"]]
   :profiles {:dev {:dependencies
                    [[criterium "0.4.0"]
+                    [cheshire "5.3.1"]
+                    [org.clojure/test.check "0.5.7"]
                     [instaparse "1.2.6"]]}}
   :java-source-paths ["src/java/"]
-  :test-selectors {:default #(not (:perf %))
+  :test-selectors {:default #(not (:perf :slow %))
                    :perf :perf
                    :all  (fn [_] true)}
   :global-vars {*warn-on-reflection* true})

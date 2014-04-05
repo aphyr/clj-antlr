@@ -224,37 +224,36 @@ On a [real-world 3.5KB JSON
 object](https://github.com/aphyr/clj-antlr/blob/master/data/test.json),
 clj-antlr with a [typical JSON
 grammar](https://github.com/aphyr/clj-antlr/blob/master/grammars/Json.g4) is
-about 70 times faster than an identical AST built by an [Instaparse
+about 100 times faster than an identical AST built by an [Instaparse
 grammar](https://github.com/aphyr/clj-antlr/blob/master/grammars/json.instaparse).
 Since Instaparse doesn't really have a separation between grammar and lexer
 rules, I'm using regular expressions for strings, ints, etc; but the transformation between grammars is pretty straightforward.
 
 ```
 kingsbury@hackbook:~/clj-antlr master$ lein test :perf
-
-lein test clj-antlr.perf-test
 Benchmarking instaparse
-WARNING: Final GC required 1.6149652300025767 % of runtime
-Evaluation count : 720 in 60 samples of 12 calls.
-             Execution time mean : 90.875875 ms
-    Execution time std-deviation : 4.531521 ms
-   Execution time lower quantile : 88.121389 ms ( 2.5%)
-   Execution time upper quantile : 98.868433 ms (97.5%)
-                   Overhead used : 10.399571 ns
+WARNING: Final GC required 1.645508727049022 % of runtime
+Evaluation count : 660 in 60 samples of 11 calls.
+             Execution time mean : 97.557634 ms
+    Execution time std-deviation : 5.132833 ms
+   Execution time lower quantile : 91.651987 ms ( 2.5%)
+   Execution time upper quantile : 108.289375 ms (97.5%)
+                   Overhead used : 10.328888 ns
 
-Found 10 outliers in 60 samples (16.6667 %)
-  low-severe   2 (3.3333 %)
-  low-mild   8 (13.3333 %)
- Variance from outliers : 35.2586 % Variance is moderately inflated by outliers
+Found 4 outliers in 60 samples (6.6667 %)
+  low-severe   3 (5.0000 %)
+  low-mild   1 (1.6667 %)
+ Variance from outliers : 38.4948 % Variance is moderately inflated by outliers
+
 
 
 Benchmarking clj-antlr
-Evaluation count : 46140 in 60 samples of 769 calls.
-             Execution time mean : 1.318649 ms
-    Execution time std-deviation : 21.488349 µs
-   Execution time lower quantile : 1.287781 ms ( 2.5%)
-   Execution time upper quantile : 1.356745 ms (97.5%)
-                   Overhead used : 10.399571 ns
+Evaluation count : 64440 in 60 samples of 1074 calls.
+             Execution time mean : 958.366202 µs
+    Execution time std-deviation : 36.434070 µs
+   Execution time lower quantile : 901.210266 µs ( 2.5%)
+   Execution time upper quantile : 1.032678 ms (97.5%)
+                   Overhead used : 10.328888 ns
 
 Ran 1 tests containing 1 assertions.
 0 failures, 0 errors.

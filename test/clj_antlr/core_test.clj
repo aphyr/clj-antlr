@@ -1,5 +1,7 @@
 (ns clj-antlr.core-test
   (:import clj_antlr.ParseError)
+  (:require [clojure.test.check.generators :as gen]
+            [cheshire.core :as cheshire])
   (:use clj-antlr.core
         clojure.test
         clojure.pprint))
@@ -109,3 +111,44 @@ mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRIN
   (let [cadr (parser "grammars/Cadr.g4")]
     (is (= (set (keys (parse cadr {:format :raw} "caddr")))
            #{:tree :tokens :parser :errors}))))
+
+(deftest ^:slow race-conditions
+  (let [json    (parser "grammars/Json.g4")
+        strings ["{\"foo\": [1, 2, 3]}"
+                 "[4, 5, 6]"
+                 "[1, true, false]"]
+        objs    '[(:jsonText
+                    (:jsonObject
+                      "{" (:member
+                            "\"foo\"" ":"
+                            (:jsonValue
+                              (:jsonArray
+                                "[" (:jsonValue (:jsonNumber "1"))
+                                "," (:jsonValue (:jsonNumber "2"))
+                                "," (:jsonValue (:jsonNumber "3")) "]"))) "}"))
+                  (:jsonText
+                    (:jsonArray
+                      "[" (:jsonValue (:jsonNumber "4"))
+                      "," (:jsonValue (:jsonNumber "5"))
+                      "," (:jsonValue (:jsonNumber "6")) "]"))
+                  (:jsonText
+                    (:jsonArray
+                      "[" (:jsonValue (:jsonNumber "1"))
+                      "," (:jsonValue "true")
+                      "," (:jsonValue "false") "]"))]]
+    (time
+    (->> (range 100)
+         (map (fn [_]
+                (future
+                  (dotimes [i 1000]
+                    ; Parse trees
+                    (is (= (map json strings)
+                           (mapv json strings)
+                           objs))
+
+                    ; Tokens
+                    (is (= (map (partial tokens json) strings)
+                           (mapv (partial tokens json) strings)))))))
+         doall
+         (map deref)
+         dorun))))
