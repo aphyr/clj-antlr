@@ -1,4 +1,4 @@
-(defproject clj-antlr "0.2.3"
+(defproject clj-antlr "0.2.3-SNAPSHOT"
   :description "Clojure bindings for the ANTLR 4 parser library."
   :url "http://github.com/aphyr/clj-antlr"
   :license {:name "Eclipse Public License"
@@ -12,7 +12,7 @@
                     [org.clojure/test.check "0.9.0"]
                     [instaparse "1.4.2"]]}}
   :java-source-paths ["src/java/"]
-  :test-selectors {:default #(not (:perf :slow %))
+  :test-selectors {:default (fn [x] (not #{:perf :slow %} x))
                    :perf :perf
                    :all  (fn [_] true)}
   :global-vars {*warn-on-reflection* true})
