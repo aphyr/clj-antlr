@@ -37,14 +37,13 @@
     (testing "throws on tokenization errors"
       (let [^ParseError err (try (parse json "[1, \uf000, 2]")
                                  (catch ParseError e e))]
-        (is (= (.getMessage err) "token recognition error at: ''\nextraneous input ',' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRING}"))))
+        (is (= (.getMessage err) "token recognition error at: ''\nextraneous input ',' expecting {'false', 'null', 'true', '{', '[', NUMBER, STRING}"))))
 
     (testing "throws on recognition errors"
       (let [^ParseError err (try (parse json "[1,2,,5,]")
                                  (catch ParseError e e))]
         (is (= (.getMessage err)
-               "extraneous input ',' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRING}
-mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRING}"))
+               "extraneous input ',' expecting {'false', 'null', 'true', '{', '[', NUMBER, STRING}\nmismatched input ']' expecting {'false', 'null', 'true', '{', '[', NUMBER, STRING}"))
         (is (= (map :line @err) [1 1]))
         (is (= (map :char @err) [5 8]))))
 
@@ -58,7 +57,8 @@ mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRIN
                         ","
                         (:jsonValue (:jsonNumber "2"))
                         ","
-                        (:clj-antlr/error (:jsonValue)))))))
+                        (:clj-antlr/error (:jsonValue "<EOF>"))
+                        "<EOF>")))))
         (is (= (first (:errors (meta t)))
                {:token nil,
                 :expected nil,
@@ -92,11 +92,7 @@ mismatched input ']' expecting {'null', '{', '[', 'false', 'true', NUMBER, STRIN
                 "["
                 (:jsonValue (:jsonNumber "1"))
                 ","
-                (:jsonValue
-                  (:jsonObject
-                    "{"
-                    (:member "\"sub\"" ":" (:clj-antlr/error (:jsonValue)))
-                    "}"))
+                (:jsonValue (:jsonObject "{" (:member "\"sub\"" ":" (:clj-antlr/error (:jsonValue "}"))) "}"))
                 ","
                 (:jsonValue (:jsonNumber "4"))
                 "]"))))))
