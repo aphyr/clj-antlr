@@ -12,7 +12,7 @@
                     [org.clojure/test.check "0.9.0"]
                     [instaparse "1.4.2"]]}}
   :java-source-paths ["src/java/"]
-  :test-selectors {:default (fn [x] (not #{:perf :slow %} x))
+  :test-selectors {:default (complement :perf)
                    :perf :perf
                    :all  (fn [_] true)}
   :global-vars {*warn-on-reflection* true})
