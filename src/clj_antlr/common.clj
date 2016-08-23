@@ -136,7 +136,7 @@
   Negative indexes map to nil."
   [^Parser parser ^long index]
   (when-not (neg? index)
-    (aget (.getTokenNames parser) index)))
+    (.getDisplayName (.getVocabulary parser) index)))
 
 (defn parse-error
   "Constructs a new ParseError exception with a list of errors."
