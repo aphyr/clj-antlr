@@ -34,6 +34,14 @@
                {:error (c/recognition-exception->map e)})
     node))
 
+(defn- attach-positional-metadata
+  [^ParserRuleContext t sexpr]
+  (let [^Token start-token (.getStart t)]
+    (->> {:clj-antlr/position
+          {:row    (dec (.getLine start-token))
+           :column (.getCharPositionInLine start-token)
+           :index  (.getStartIndex start-token)}}
+         (with-meta sexpr))))
 
 (defn- literal->sexpr
   [^ParseTree t]
@@ -43,7 +51,8 @@
   (if (instance? ParserRuleContext t)
     (->> (mapv #(sexpr % p) (c/children t))
          (cons (sexpr-head t p))
-         (maybe-error-node t))
+         (maybe-error-node t)
+         (attach-positional-metadata t))
     (literal->sexpr t)))
 
 (defn tokens->sexpr
