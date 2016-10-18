@@ -148,3 +148,34 @@
          doall
          (map deref)
          dorun))))
+
+(deftest token-positions
+  (let [json (parser "grammars/Json.g4")
+        result (json "{\"foo\":\n \"bar\"}")
+        position-of #(-> %
+                         meta
+                         :clj-antlr/position
+                         ((juxt :row :column :index)))
+        verify-object (fn [expected-object expected-position sexpr]
+                        (is (= expected-object sexpr))
+                        (is (= expected-position (position-of sexpr))))]
+
+    ;; Top-Level Result should always be at (0,0)
+    (verify-object
+      '(:jsonText
+         (:jsonObject
+           "{"
+           (:member
+             "\"foo\"" ":"
+             (:jsonValue
+               (:jsonString
+                 "\"bar\"")))
+           "}"))
+      [0 0 0]
+      result)
+
+    ;; "bar" is on the second line, indented by 1, overall at index 9
+    (verify-object
+      '(:jsonString "\"bar\"")
+      [1 1 9]
+      (-> result second (nth 2) last second))))

@@ -19,22 +19,41 @@
 ;  (sexpr [t p] (cons (keyword (c/parser-rule-name p (.getRuleIndex t)))
 ;                     (doall (map #(sexpr % p) (c/children t))))))
 
+(defn- sexpr-head
+  [^ParserRuleContext t ^Parser p]
+  (->> (.getRuleIndex ^ParserRuleContext t)
+       (c/parser-rule-name p)
+       c/fast-keyword))
+
+(defn- maybe-error-node
+  [^ParserRuleContext t node]
+  ; If there was a recognition error, we'll wrap the node in an ::error
+  ; and drop the exception in the metadata.
+  (if-let [e (.exception ^ParserRuleContext t)]
+    (with-meta (list :clj-antlr/error node)
+               {:error (c/recognition-exception->map e)})
+    node))
+
+(defn- attach-positional-metadata
+  [^ParserRuleContext t sexpr]
+  (let [^Token start-token (.getStart t)]
+    (->> {:clj-antlr/position
+          {:row    (dec (.getLine start-token))
+           :column (.getCharPositionInLine start-token)
+           :index  (.getStartIndex start-token)}}
+         (with-meta sexpr))))
+
+(defn- literal->sexpr
+  [^ParseTree t]
+  (.getText t))
+
 (defn sexpr [^ParseTree t ^Parser p]
   (if (instance? ParserRuleContext t)
-    (let [node (cons (->>
-                       (.getRuleIndex ^ParserRuleContext t)
-                       (c/parser-rule-name p)
-                       c/fast-keyword)
-                     (doall (map #(sexpr % p) (c/children t))))]
-      ; If there was a recognition error, we'll wrap the node in an ::error
-      ; and drop the exception in the metadata.
-      (if-let [e (.exception ^ParserRuleContext t)]
-        (with-meta (list :clj-antlr/error node)
-                   {:error (c/recognition-exception->map e)})
-        node))
-
-    ; Text literal
-    (.getText t)))
+    (->> (mapv #(sexpr % p) (c/children t))
+         (cons (sexpr-head t p))
+         (maybe-error-node t)
+         (attach-positional-metadata t))
+    (literal->sexpr t)))
 
 (defn tokens->sexpr
   "Takes a Parser and a CommonTokenStream and emits a lazy sequence of
