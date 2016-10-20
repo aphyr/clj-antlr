@@ -1,4 +1,4 @@
-(defproject clj-antlr "0.2.4"
+(defproject clj-antlr "0.2.5-SNAPSHOT"
   :description "Clojure bindings for the ANTLR 4 parser library."
   :url "http://github.com/aphyr/clj-antlr"
   :license {:name "Eclipse Public License"
