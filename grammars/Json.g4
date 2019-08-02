@@ -109,7 +109,7 @@ HEX_DIGIT
 
 fragment
 ESC_SEQ
-  : '\\' ('\"'|'\\'|'/'|'b'|'f'|'n'|'r'|'t')
+  : '\\' ('"'|'\\'|'/'|'b'|'f'|'n'|'r'|'t')
   | UNICODE_ESC
 ;
 
