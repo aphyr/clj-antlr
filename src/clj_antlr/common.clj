@@ -6,7 +6,9 @@
            (java.util.concurrent ConcurrentHashMap)
            (clj_antlr ParseError)
            (org.antlr.v4.runtime ANTLRInputStream
+                                 CaseChangingCharStream
                                  CaseInsensitiveInputStream
+                                 CharStreams
                                  CommonTokenStream
                                  Parser
                                  Recognizer
@@ -33,8 +35,17 @@
             (.put fast-keyword-cache s k)
             k)))))
 
+(defn char-stream-from-input
+  "Constructs a CharStream out of a String, Reader, or InputStream."
+  [s]
+  (condp instance? s
+    InputStream (CharStreams/fromStream s)
+    Reader (CharStreams/fromReader s)
+    String (CharStreams/fromString s)))
+
 (defmacro multi-hinted-let
-  "A let expression which expands into multiple type-hinted bodies with runtime
+  "Deprecated, since antlr-input-stream is deprecated.
+  A let expression which expands into multiple type-hinted bodies with runtime
   type dispatch provided by instanceof. Thanks to amalloy, as usual!"
   [[name expr classes] & body]
   (let [x (gensym)]
@@ -48,21 +59,47 @@
                                                 " ~x " in " '~classes)))))))
 
 (defn antlr-input-stream
-  "Constructs an ANTLRInputStream out of a String, Reader, or InputStream."
+  "Deprecated in favor of char-stream.
+  Constructs an ANTLRInputStream out of a String, Reader, or InputStream."
   [s]
   (multi-hinted-let [hinted s [InputStream Reader String]]
                     (ANTLRInputStream. hinted)))
 
+(defn case-changing-char-stream
+  "Wraps a CharStream in a CaseChangingCharStream. Called with one argument,
+  defaults to lowercasing all input, but the upper? argument allows for case to be chosen.
+  Adapted from https://github.com/parrt/antlr4/blob/case-insensitivity-doc/doc/resources/CaseChangingCharStream.java."
+  ([charstream]
+   (case-changing-char-stream charstream false))
+  ([charstream upper?]
+   (CaseChangingCharStream. charstream upper?)))
+
+
 (defn case-insensitive-input-stream
-  "Constructs an ANTLRInputStream out of a string. Presents all characters to
+  "Deprecated in favor of case-changing-char-stream.
+  Constructs an ANTLRInputStream out of a string. Presents all characters to
   the lexer as lowercase, but getText methods will return the original string.
   Adapted from https://gist.github.com/sharwell/9424666. Consumes memory
   proportional to the input string."
   [input]
   (CaseInsensitiveInputStream. input))
 
+(defn char-stream
+  "Constructs a charstream. With no options, calls char-stream-from-input. With
+  options:
+
+  :case-sensitive? true calls char-stream-from-input,
+                   false calls case-changing-char-stream"
+  ([s] (char-stream-from-input s))
+  ([s opts]
+   (if (get opts :case-sensitive? true)
+     (char-stream-from-input s)
+     (case-changing-char-stream (char-stream-from-input s) false))))
+
+
 (defn input-stream
-  "Constructs an inputstream. With no options, calls antlr-input-stream. With
+  "Deprecated in favor of char-stream.
+  Constructs an inputstream. With no options, calls antlr-input-stream. With
   options:
 
   :case-sensitive? true calls antlr-input-stream,

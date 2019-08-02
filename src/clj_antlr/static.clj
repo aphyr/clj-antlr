@@ -19,7 +19,7 @@
 (defmacro lexer
     "Given a lexer class, returns a lexer over a string or stream."
     [lexer-class s]
-    `(new ~lexer-class (input-stream ~s)))
+    `(new ~lexer-class (char-stream ~s)))
 
 (defn signature
   "The signature of a reflected method."

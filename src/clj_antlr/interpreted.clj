@@ -51,7 +51,7 @@
   initialize our parser, which will later reset and re-use this object
   for speed."
   [^Grammar grammar]
-  (.createLexerInterpreter grammar (common/input-stream "")))
+  (.createLexerInterpreter grammar (common/char-stream "")))
 
 (defn parser-interpreter
   "Builds a new parser interpreter around a given grammar and lexer."
@@ -60,9 +60,9 @@
 
 (defn reset-lexer-interpreter!
   "Prepares a lexer interpreter for a new run."
-  [^LexerInterpreter lexer error-listener input-stream]
+  [^LexerInterpreter lexer error-listener char-stream]
   (doto lexer
-    (.setInputStream input-stream)
+    (.setInputStream char-stream)
     (.reset)
     (.removeErrorListeners)
     (.addErrorListener error-listener)))
@@ -87,8 +87,8 @@
     (locking p ; lmao pretty sure returning tokens is a race condition
                ; waiting to happen
       (let [error-listener (common/error-listener)
-            input-stream   (common/input-stream text opts)]
-        (reset-lexer-interpreter! lexer error-listener input-stream)
+            char-stream   (common/char-stream text opts)]
+        (reset-lexer-interpreter! lexer error-listener char-stream)
 
         (let [tokens (common/tokens lexer)]
           (reset-parser-interpreter! parser error-listener tokens)
@@ -107,7 +107,7 @@
 (defn singlethreaded-parser
   "Creates a new single-threaded parser for a grammar."
   [^Grammar grammar]
-  (let [^Lexer lexer (.createLexerInterpreter grammar (common/input-stream ""))
+  (let [^Lexer lexer (.createLexerInterpreter grammar (common/char-stream ""))
         parser       (.createParserInterpreter grammar (common/tokens lexer))]
      (SinglethreadedParser. grammar lexer parser)))
 
@@ -140,13 +140,13 @@
          _              (assert rule)
          rule           (.index rule)
 
-         ; Input stream
-         input-stream (if (get opts :case-sensitive? true)
-                        (common/input-stream input)
-                        (common/case-insensitive-input-stream input))
+         ; Char stream
+         char-stream (if (get opts :case-sensitive? true)
+                        (common/char-stream input)
+                        (common/case-changing-char-stream input))
 
          ; Extract tokens
-         ^Lexer lexer   (doto (.createLexerInterpreter grammar input-stream)
+         ^Lexer lexer   (doto (.createLexerInterpreter grammar char-stream)
                           (.removeErrorListeners)
                           (.addErrorListener error-listener))
          tokens         (common/tokens lexer)
