@@ -49,7 +49,6 @@
   A let expression which expands into multiple type-hinted bodies with runtime
   type dispatch provided by instanceof. Thanks to amalloy, as usual!"
   [[name expr classes] & body]
-  (log/warn "multi-hinted-let is deprecated and will be removed in a future clj-antlr release. Migrate to char-stream functionality.")
   (let [x (gensym)]
     `(let [~x ~expr]
        (condp instance? ~x
