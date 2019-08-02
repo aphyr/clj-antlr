@@ -1,6 +1,7 @@
 (ns clj-antlr.common
   "Common functions for building and using parsers."
-  (:require [clojure.string :as string])
+  (:require [clojure.string :as string]
+            [clojure.tools.logging :as log])
   (:import (java.io InputStream
                     Reader)
            (java.util.concurrent ConcurrentHashMap)
@@ -48,6 +49,7 @@
   A let expression which expands into multiple type-hinted bodies with runtime
   type dispatch provided by instanceof. Thanks to amalloy, as usual!"
   [[name expr classes] & body]
+  (log/warn "multi-hinted-let is deprecated and will be removed in a future clj-antlr release. Migrate to char-stream functionality.")
   (let [x (gensym)]
     `(let [~x ~expr]
        (condp instance? ~x
@@ -62,6 +64,7 @@
   "Deprecated in favor of char-stream.
   Constructs an ANTLRInputStream out of a String, Reader, or InputStream."
   [s]
+  (log/warn "antlr-input-stream is deprecated and will be removed in a future clj-antlr release. Migrate to char-stream functionality.")
   (multi-hinted-let [hinted s [InputStream Reader String]]
                     (ANTLRInputStream. hinted)))
 
@@ -82,6 +85,7 @@
   Adapted from https://gist.github.com/sharwell/9424666. Consumes memory
   proportional to the input string."
   [input]
+  (log/warn "case-insensitive-input-stream is deprecated and will be removed in a future clj-antlr release. Migrate to char-stream functionality.")
   (CaseInsensitiveInputStream. input))
 
 (defn char-stream
@@ -104,8 +108,11 @@
 
   :case-sensitive? true calls antlr-input-stream,
                    false calls case-insensitive-input-stream"
-  ([s] (antlr-input-stream s))
+  ([s]
+   (log/warn "input-stream is deprecated and will be removed in a future clj-antlr release. Migrate to char-stream functionality.")
+   (antlr-input-stream s))
   ([s opts]
+   (log/warn "input-stream is deprecated and will be removed in a future clj-antlr release. Migrate to char-stream functionality.")
    (if (get opts :case-sensitive? true)
      (antlr-input-stream s)
      (case-insensitive-input-stream s))))

@@ -5,7 +5,8 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.antlr/antlr4-runtime "4.7.2"]
-                 [org.antlr/antlr4 "4.7.2"]]
+                 [org.antlr/antlr4 "4.7.2"]
+                 [org.clojure/tools.logging "0.5.0"]]
   :profiles {:dev {:dependencies
                    [[criterium "0.4.5"]
                     [cheshire "5.8.1"]
