@@ -9,8 +9,8 @@
                  [org.clojure/tools.logging "0.5.0"]]
   :profiles {:dev {:dependencies
                    [[criterium "0.4.5"]
-                    [cheshire "5.8.1"]
-                    [org.clojure/test.check "0.9.0"]
+                    [cheshire "5.9.0"]
+                    [org.clojure/test.check "0.10.0"]
                     [instaparse "1.4.10"]]}}
   :java-source-paths ["src/java/"]
   :test-selectors {:default (complement :perf)
