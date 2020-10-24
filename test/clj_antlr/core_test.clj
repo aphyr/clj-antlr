@@ -1,10 +1,7 @@
 (ns clj-antlr.core-test
   (:import clj_antlr.ParseError)
-  (:require [clojure.test.check.generators :as gen]
-            [cheshire.core :as cheshire])
-  (:use clj-antlr.core
-        clojure.test
-        clojure.pprint))
+  (:require [clj-antlr.core :refer [parse parser tokens]]
+            [clojure.test :refer [deftest is testing]]))
 
 (deftest interprets-json
   (let [json (parser "grammars/Json.g4")
@@ -12,6 +9,7 @@
     (is (= sexpr
            '(:jsonText
               (:jsonObject
+
                 "{"
                 (:member
                   "\"nums\""
@@ -31,6 +29,16 @@
   (let [cadr (parser (slurp "grammars/Cadr.g4"))]
     (is (= (cadr "cdr")
            '(:cadr "c" "d" "r")))))
+
+(deftest string-grammar-test2
+  (let [caxdr (parser "grammars/Caxdr.g4" {:use-alternates? true})]
+    (is (= (caxdr "caxdar")
+           '(:caxdr (:c "c") (:a "a") (:xBranch "x") (:dBranch "d") (:a "a") (:r "r"))))))
+
+(deftest string-grammar-test3
+  (let [caxdr (parser "grammars/Caxdr.g4")]
+    (is (= (clj-antlr.core/parse caxdr {:use-alternates? true} "caxdar")
+           '(:caxdr (:c "c") (:a "a") (:xBranch "x") (:dBranch "d") (:a "a") (:r "r"))))))
 
 (deftest error-test
   (let [json (parser "grammars/Json.g4")]
@@ -82,8 +90,9 @@
                       "]"))))))))
 
 (deftest error-tagging-test
-  "Should produce maximally valid trees, with errors constrained where recovery
-  is possible."
+  #_:clj-kondo/ignore
+  ;; "Should produce maximally valid trees, with errors constrained where recovery
+  ;; is possible."
   (let [json (parser "grammars/Json.g4" {:throw? false})
         tree (json   "[1, {\"sub\": map}, 4]")]
     (is (= tree
@@ -136,7 +145,7 @@
     (->> (range 100)
          (map (fn [_]
                 (future
-                  (dotimes [i 1000]
+                  (dotimes [#_:clj-kondo/ignore i 1000]
                     ; Parse trees
                     (is (= (map json strings)
                            (mapv json strings)

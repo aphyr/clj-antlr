@@ -14,7 +14,9 @@
 
   clojure.lang.IFn
   (invoke [parser text]
-    (parse parser text)))
+    (parse parser text))
+  (invoke [parser opts text]
+          (parse parser opts text)))
 
 (defn parse*
   "Helper for parse"
@@ -32,9 +34,9 @@
   a data structure. If options are passed, override the options given at parser
   construction."
   ([^ParserWrapper parser input]
-   (parse* parser (.opts parser) input))
+   (parse* parser (:opts parser) input))
   ([^ParserWrapper parser opts input]
-   (parse* parser (merge (.opts parser) opts) input)))
+   (parse* parser (merge (:opts parser) opts) input)))
 
 (defn tokens
   "Instead of a parse tree, yields a sequence of tokens."
@@ -47,7 +49,7 @@
 (defn parser
   "Constructs a new parser. Takes a filename for an Antlr v4 grammar. Options:
 
-  :format           The parse tree to generate. One of:
+  :format           The parse tree to generate. One of
                       :sexp (default)  Nested lists, node names first
                       :raw             Equivalent to identity
                       <any function>   Takes a map of {:tree, :parser, etc}
@@ -60,7 +62,9 @@
   :case-sensitive?  Whether the lexer must match the exact case of characters.
                     Defaults true. If false, the tokenizer will only receive
                     lowercase characters. The generated parse tree will still
-                    retain the case of the original text."
+                    retain the case of the original text.
+  :use-alternates?  If truthy, uses the alternate name for a node, rather than
+                    the rule name."
   ([filename]
    (parser filename {}))
   ([filename opts]

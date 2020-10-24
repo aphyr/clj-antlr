@@ -1,16 +1,8 @@
 (ns clj-antlr.static
   "Interacts with statically compiled antlr classes."
-  (:use clojure.reflect)
-  (:require [clj-antlr.common :as common]
-            [clojure.set :as set])
-  (:import (java.io InputStream
-                    Reader)
-           (org.antlr.v4.runtime ANTLRInputStream
-                                 CommonTokenStream)
-           (org.antlr.v4.runtime.tree Tree
-                                      ParseTree
-                                      ParseTreeWalker
-                                      ParseTreeVisitor)))
+  (:require [clojure.reflect :refer [reflect]])
+  (:import (org.antlr.v4.runtime.tree ParseTreeVisitor)))
+
 (defmacro parser
     "Constructs a parser over a token stream."
     [parser-class tokens]
@@ -116,7 +108,7 @@
             children))))
 
 (defn visitor-spec
-  "Helps compile reify functions pecs for a particular visitor method. In its
+  "Helps compile reify functions specs for a particular visitor method. In its
   two-arity form, generates one of a few common parse helpers. In its n-arity
   form, passes through user-specified code."
   ([sig & args]
@@ -127,7 +119,7 @@
      (case (first args)
        ; This builtin chooses the first non-nil branch.
        :first-alternative
-       (let [children (vals (visitor-method-children sig))]
+       (let [_children (vals (visitor-method-children sig))]
          `(~(:name sig) [~'this ~'ctx] (visit ~'this (child ~'ctx 0))))))))
 
 (defmacro visitor

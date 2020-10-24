@@ -1,11 +1,12 @@
 (ns clj-antlr-demo.bin
   (:gen-class)
-  (:require [cheshire.core :as ch])
+  (:require [cheshire.core :as ch :refer [bench]])
   (:import (java.io PushbackReader))
-  (:use criterium.core
+  (:require criterium.core
         clojure.java.io
         clj-antlr-demo.edn))
 
+(declare with-progress-reporting reader parse-string)
 (defn -main
   "Parse a JSON file."
   [file]

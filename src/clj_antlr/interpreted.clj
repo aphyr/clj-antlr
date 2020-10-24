@@ -5,15 +5,10 @@
             [clj-antlr.proto  :as proto])
   (:import (java.lang ThreadLocal)
            (org.antlr.v4 Tool)
-           (org.antlr.v4.tool LexerGrammar
-                              Grammar)
-           (org.antlr.v4.parse ANTLRParser)
-           (org.antlr.v4.runtime CommonTokenStream
-                                 Lexer
+           (org.antlr.v4.tool Grammar)
+           (org.antlr.v4.runtime Lexer
                                  LexerInterpreter
-                                 Parser
-                                 ParserInterpreter)
-           (org.antlr.v4.runtime.tree ParseTree)))
+                                 ParserInterpreter)))
 
 (defn ^Tool tool
   "Construct a new ANTLR tool"
@@ -53,10 +48,15 @@
   [^Grammar grammar]
   (.createLexerInterpreter grammar (common/char-stream "")))
 
+; (defn parser-interpreter
+;   "Builds a new parser interpreter around a given grammar and lexer."
+;   [^Grammar grammar ^Lexer lexer]
+;   (.createParserInterpreter grammar (common/tokens lexer)))
+;   
 (defn parser-interpreter
   "Builds a new parser interpreter around a given grammar and lexer."
   [^Grammar grammar ^Lexer lexer]
-  (.createParserInterpreter grammar (common/tokens lexer)))
+  (.createGrammarParserInterpreter grammar (common/tokens lexer)))
 
 (defn reset-lexer-interpreter!
   "Prepares a lexer interpreter for a new run."
@@ -102,14 +102,24 @@
             {:tree   tree
              :tokens tokens
              :errors @error-listener
-             :parser parser}))))))
+             :parser parser
+             :grammar grammar
+             :opts opts}))))))
 
+; (defn singlethreaded-parser
+;   "Creates a new single-threaded parser for a grammar."
+;   [^Grammar grammar]
+;   (let [^Lexer lexer (.createLexerInterpreter grammar (common/char-stream ""))
+;         parser       (.createParserInterpreter grammar (common/tokens lexer))]
+;  (SinglethreadedParser. grammar lexer parser)))
+;  
 (defn singlethreaded-parser
   "Creates a new single-threaded parser for a grammar."
   [^Grammar grammar]
-  (let [^Lexer lexer (.createLexerInterpreter grammar (common/char-stream ""))
-        parser       (.createParserInterpreter grammar (common/tokens lexer))]
-     (SinglethreadedParser. grammar lexer parser)))
+  (println grammar)
+  (let [^Lexer lexer (.createLexerInterpreter grammar (common/input-stream ""))
+        parser       (.createGrammarParserInterpreter grammar (common/tokens lexer))]
+    (SinglethreadedParser. grammar lexer parser)))
 
 ; Wrapper for using the singlethreaded parser in multiple threads.
 (defrecord ThreadLocalParser [^ThreadLocal local grammar]
@@ -142,8 +152,8 @@
 
          ; Char stream
          char-stream (if (get opts :case-sensitive? true)
-                        (common/char-stream input)
-                        (common/case-changing-char-stream input))
+                       (common/char-stream input)
+                       (common/case-changing-char-stream input))
 
          ; Extract tokens
          ^Lexer lexer   (doto (.createLexerInterpreter grammar char-stream)
@@ -153,18 +163,19 @@
 
          ; Create parser
          ^ParserInterpreter parser (doto
-                                     (.createParserInterpreter grammar tokens)
+                                    (.createParserInterpreter grammar tokens)
                                      (.removeErrorListeners)
-                                     (.addErrorListener error-listener))]
-
-     ; Parse
-     (let [tree (.parse parser rule)]
+                                     (.addErrorListener error-listener))
+         ; Parse
+         tree (.parse parser rule)]
        ; Throw errors unless requested not to
-       (when-let [errors (and (get opts :throw? true)
-                              @error-listener)]
-         (throw (common/parse-error errors tree)))
+     (when-let [errors (and (get opts :throw? true)
+                            @error-listener)]
+       (throw (common/parse-error errors tree)))
 
-       {:tree   tree
-        :tokens tokens
-        :errors @error-listener
-        :parser parser}))))
+     {:tree   tree
+      :tokens tokens
+      :errors @error-listener
+      :parser parser
+      :grammar grammar
+      :opts opts})))

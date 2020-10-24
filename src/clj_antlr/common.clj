@@ -6,20 +6,18 @@
                     Reader)
            (java.util.concurrent ConcurrentHashMap)
            (clj_antlr ParseError)
-           (org.antlr.v4.runtime ANTLRInputStream
+           (org.antlr.v4.runtime ANTLRErrorListener
+                                 ANTLRInputStream
                                  CaseChangingCharStream
                                  CaseInsensitiveInputStream
                                  CharStreams
                                  CommonTokenStream
                                  Parser
-                                 Recognizer
-                                 ANTLRErrorListener
                                  RecognitionException)
            (org.antlr.v4.tool Grammar)
-           (org.antlr.v4.runtime.tree Tree
-                                      ParseTree
-                                      ParseTreeWalker
-                                      ParseTreeVisitor)))
+           (org.antlr.v4.runtime.tree ParseTree
+                                      ParseTreeVisitor
+                                      Tree)))
 
 (def ^ConcurrentHashMap fast-keyword-cache
   "A map of strings to keywords."
@@ -59,6 +57,7 @@
          (throw (IllegalArgumentException. (str "No matching class for
                                                 " ~x " in " '~classes)))))))
 
+(declare hinted)
 (defn antlr-input-stream
   "Deprecated in favor of char-stream.
   Constructs an ANTLRInputStream out of a String, Reader, or InputStream."
@@ -194,7 +193,7 @@
   {:rule     (.getCtx e)
    :state    (.getOffendingState e)
    :expected (try (.getExpectedTokens e)
-                  (catch IllegalArgumentException e
+                  (catch IllegalArgumentException _
                     ; I think ANTLR throws here for
                     ; tokenizer errors.
                     nil))
