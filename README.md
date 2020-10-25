@@ -217,8 +217,9 @@ clj-antlr.core/parser
                     Defaults true. If false, the tokenizer will only receive
                     lowercase characters. The generated parse tree will still
                     retain the case of the original text.
+
   :use-alternates?  If truthy, uses the alternate name for a node, rather than
-                    the rule name.
+                    the rule name. Defaults false.
 ```
 
 ## Where can I find grammars?
