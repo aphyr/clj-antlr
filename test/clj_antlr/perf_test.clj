@@ -1,10 +1,10 @@
 (ns clj-antlr.perf-test
-  (:use clj-antlr.core
-        clojure.test
-        clojure.pprint)
-  (:require [criterium.core :as criterium]
+  (:require [clj-antlr.core :refer [parser]]
+            [clojure.test :refer [deftest is]]
+            [criterium.core :as criterium]
             [instaparse.core :as insta]))
 
+;#_:clj-kondo/ignore
 (deftest ^:perf perf-test
   (let [clj-antlr (parser "grammars/Json.g4")
         insta (insta/parser "grammars/json.instaparse")

@@ -1,7 +1,7 @@
 (ns clj-antlr-demo.edn
   "An example EDN parser."
-  (:use clj-antlr.core)
-  (:require [clojure.string :as s])
+  (:require [clojure.string :as s]
+            [common.clj :refer [child text visit visit-string]])
   (:import EdnVisitor
            EdnLexer
            EdnParser))
@@ -54,6 +54,9 @@
   (if (= \N (last s))
     (read-string s) ; cop-out
     (Long. s)))
+
+(declare Edn Element True False Nil Symbol Keyword List Vector Set Map)
+(declare visitor this ctx c)
 
 (def v
   (visitor EdnVisitor

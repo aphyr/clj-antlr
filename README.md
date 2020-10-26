@@ -203,6 +203,11 @@ clj-antlr.core/parser
 ([filename] [filename opts])
   Constructs a new parser. Takes a filename for an Antlr v4 grammar. Options:
 
+  :format           The parse tree to generate. One of
+                      :sexp (default)  Nested lists, node names first
+                      :raw             Equivalent to identity
+                      <any function>   Takes a map of {:tree, :parser, etc}
+
   :root             The string name of the rule to begin parsing. Defaults to
                     the first rule in the grammar.
 
@@ -212,6 +217,9 @@ clj-antlr.core/parser
                     Defaults true. If false, the tokenizer will only receive
                     lowercase characters. The generated parse tree will still
                     retain the case of the original text.
+
+  :use-alternates?  If truthy, uses the alternate name for a node, rather than
+                    the rule name. Defaults false.
 ```
 
 ## Where can I find grammars?
