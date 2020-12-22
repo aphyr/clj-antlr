@@ -69,4 +69,6 @@
   ([filename]
    (parser filename {}))
   ([filename opts]
-   (ParserWrapper. (interpreted/parser filename) opts)))
+   (ParserWrapper. (interpreted/parser filename) opts))
+  ([lexer-filename parser-filename opts]
+   (ParserWrapper. (interpreted/parser lexer-filename parser-filename) opts)))
