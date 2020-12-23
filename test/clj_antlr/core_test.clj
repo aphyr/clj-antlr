@@ -40,6 +40,11 @@
     (is (= (clj-antlr.core/parse caxdr {:use-alternates? true} "caxdar")
            '(:caxdr (:c "c") (:a "a") (:xBranch "x") (:dBranch "d") (:a "a") (:r "r"))))))
 
+(deftest split-grammar-test
+  (let [g (parser "grammars/L.g4" "grammars/T.g4" {})]
+    (is (= (g "abbc")
+           '(:s "a" "b" "b" "c")))))
+
 (deftest error-test
   (let [json (parser "grammars/Json.g4")]
     (testing "throws on tokenization errors"
@@ -115,7 +120,7 @@
 (deftest format-test
   (let [cadr (parser "grammars/Cadr.g4")]
     (is (= (set (keys (parse cadr {:format :raw} "caddr")))
-           #{:tree :tokens :parser :errors}))))
+           #{:errors :tree :grammar :parser :opts :tokens}))))
 
 (deftest ^:slow race-conditions
   (let [json    (parser "grammars/Json.g4")
@@ -188,3 +193,11 @@
       '(:jsonString "\"bar\"")
       [1 1 9]
       (-> result second (nth 2) last second))))
+
+
+(comment
+
+  (let [g (parser "grammars/L.g4" "grammars/T.g4" {})]
+    (g "abbc"))
+
+  0)

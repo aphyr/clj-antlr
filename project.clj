@@ -11,6 +11,7 @@
                    [[criterium "0.4.6"]
                     [cheshire "5.10.0"]
                     [org.clojure/test.check "1.1.0"]
+                    [org.slf4j/slf4j-simple "1.7.30"]
                     [instaparse "1.4.10"]]}}
   :java-source-paths ["src/java/"]
   :test-selectors {:default (complement :perf)

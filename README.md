@@ -51,6 +51,14 @@ user=> (aaa "aAAaa A aAA AAAAaAA")
 (:aaa "aAAaa" "A" "aAA" "AAAAaAA")
 ```
 
+Works with split (lexer and parser) grammars:
+
+```clj
+  clj::clj-antlr.core-test=> (let [g (parser "grammars/L.g4" "grammars/T.g4" {})] (g "abbc"))
+  (:s "a" "b" "b" "c")
+
+```
+
 ## Errors
 
 ANTLR can recover from errors in mid-parse by performing single-token insertion
