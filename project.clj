@@ -14,6 +14,7 @@
                     [org.slf4j/slf4j-simple "1.7.30"]
                     [instaparse "1.4.10"]]}}
   :java-source-paths ["src/java/"]
+  :javac-options ["-target" "1.8" "-source" "1.8"]
   :test-selectors {:default (complement :perf)
                    :perf :perf
                    :all  (fn [_] true)}
