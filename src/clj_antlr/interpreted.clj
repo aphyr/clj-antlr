@@ -116,9 +116,10 @@
 (defn singlethreaded-parser
   "Creates a new single-threaded parser for a grammar."
   [^LexerGrammar lexer-grammar ^Grammar grammar]
-  (println grammar)
-  (let [^Lexer lexer (.createLexerInterpreter lexer-grammar (common/char-stream ""))
-        parser       (.createGrammarParserInterpreter grammar (common/tokens lexer))]
+  (let [^Lexer lexer (.createLexerInterpreter
+                       lexer-grammar (common/char-stream ""))
+        parser       (.createGrammarParserInterpreter
+                       grammar (common/tokens lexer))]
     (SinglethreadedParser. grammar lexer parser)))
 
 ; Wrapper for using the singlethreaded parser in multiple threads.
