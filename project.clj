@@ -4,8 +4,8 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.3"]
-                 [org.antlr/antlr4-runtime "4.9.2"]
-                 [org.antlr/antlr4 "4.9.2"]
+                 [org.antlr/antlr4-runtime "4.9.3"]
+                 [org.antlr/antlr4 "4.9.3"]
                  [org.clojure/tools.logging "1.1.0"]]
   :profiles {:dev {:dependencies
                    [[criterium "0.4.6"]
