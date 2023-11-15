@@ -40,11 +40,13 @@
 
 (defn- attach-positional-metadata
   [^ParserRuleContext t sexpr]
-  (let [^Token start-token (.getStart t)]
+  (let [^Token start-token (.getStart t)
+        ^Token stop-token (.getStop t)]
     (->> {:clj-antlr/position
           {:row    (dec (.getLine start-token))
            :column (.getCharPositionInLine start-token)
-           :index  (.getStartIndex start-token)}}
+           :index  (.getStartIndex start-token)
+           :stop   (.getStopIndex stop-token)}}
          (with-meta sexpr))))
 
 (defn- literal->sexpr
