@@ -169,7 +169,7 @@
         position-of #(-> %
                          meta
                          :clj-antlr/position
-                         ((juxt :row :column :index)))
+                         ((juxt :row :column :index :stop)))
         verify-object (fn [expected-object expected-position sexpr]
                         (is (= expected-object sexpr))
                         (is (= expected-position (position-of sexpr))))]
@@ -185,13 +185,13 @@
                (:jsonString
                  "\"bar\"")))
            "}"))
-      [0 0 0]
+      [0 0 0 14]
       result)
 
-    ;; "bar" is on the second line, indented by 1, overall at index 9
+    ;; "bar" is on the second line, indented by 1, overall at index 9, ends at index 13
     (verify-object
       '(:jsonString "\"bar\"")
-      [1 1 9]
+      [1 1 9 13]
       (-> result second (nth 2) last second))))
 
 
