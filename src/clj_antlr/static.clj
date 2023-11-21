@@ -1,6 +1,8 @@
 (ns clj-antlr.static
   "Interacts with statically compiled antlr classes."
-  (:require [clojure.reflect :refer [reflect]])
+  (:require
+      [clojure.reflect :refer [reflect]]
+      [clj-antlr.common :refer :all])
   (:import (org.antlr.v4.runtime.tree ParseTreeVisitor)))
 
 (defmacro parser
@@ -79,7 +81,7 @@
                        (condp = (:return-type meth)
                          ; Multiple children
                          'java.util.List
-                         `(map (∂ visit ~'this) ~'v)
+                         `(map (partial visit ~'this) ~'v)
 
                          ; Terminal node
                          'org.antlr.v4.runtime.tree.TerminalNode
@@ -192,7 +194,7 @@
        (visit [~'this ~'tree] (.accept ~'tree ~'this))
 
        (visitChildren [~'this ~'node]
-                      (map (∂ visit ~'this) (children ~'node)))
+                      (map (partial visit ~'this) (children ~'node)))
 
        (visitTerminal [~'this ~'node])
 
